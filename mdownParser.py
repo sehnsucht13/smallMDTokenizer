@@ -35,6 +35,9 @@ class mdTokenizer:
         self.currIndex = 0
         self.tokens = []
 
+    def getNextLine(self):
+        pass
+
     def skipWhiteSpace(self):
         """Skips all whitespace until the next character is encountered"""
         while(self.text[self.currIndex] == ' '):
@@ -99,12 +102,38 @@ class mdTokenizer:
         # The image link in standard markdown is just like the standard link
         self.tokenizeLink() 
 
+    def tokenizeCheckItem(self):
+        status = None
+        checkItemContent = ""
+        self.skipWhiteSpace()
+        # Skip over the -
+        self.currIndex += 1
+        self.skipWhiteSpace()
+        # Skip over [
+        self.currIndex += 1
+
+        if(self.text[self.currIndex] == 'x'):
+            status = True
+
+        # Skip over ]
+        self.currIndex += 1
+        self.currIndex += 1
+        self.skipWhiteSpace()
+        while(self.text[self.currIndex] != '\n'):
+            checkItemContent += self.text[self.currIndex]
+            self.currIndex += 1
+
+        self.tokens.append({"type": "Check", "status" : status, "text" : checkItemContent})
+
+
+         
+
     def returnTokenList(self):
         return self.tokens
 
 # some small tests below
-test = "  [   here is my link]     (here is my path)"
+test = " -           [ ]            Here is some content for my check list item\n"
 
 output = mdTokenizer(test)
-output.tokenizeLink()
+output.tokenizeCheckItem()
 print(output.returnTokenList())
