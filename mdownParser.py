@@ -1,32 +1,34 @@
-class mdParser(self, text):
+class mdTokenizer:
+    def __init__(self, templateText):
+        self.text = templateText
+        self.currIndex = 0
+        self.lookAhead = 0
+        self.lineNum = 0
+        self.tokens = []
+
     def tokenizeHeading(self, text):
         # Check if the first char in stream is #
         headingSize = 0
         headingText = ""
-        currIndex = 0
-        while(text[currIndex] == '#'):
+        while(text[self.currIndex] == '#'):
             headingSize += 1
-            currIndex += 1
-        print(currIndex)
+            self.currIndex += 1
         # Skip over intial whitespace
-        while(text[currIndex] == ' '):
-            currIndex += 1
+        while(text[self.currIndex] == ' '):
+            self.currIndex += 1
+        print(self.currIndex)
+        while(text[self.currIndex] != '\n'):
+            headingText += text[self.currIndex]
+            self.currIndex += 1
 
-        print(currIndex)
-        while(currIndex < len(text)):
-            headingText += text[currIndex]
-            currIndex += 1
+        # Append to token list
+        self.tokens.append({"size":headingSize, "text":headingText})
 
-        return {"size":headingSize, "text":headingText}
+    def returnTokenList(self):
+        return self.tokens
 
+test = "### Hello world\n"
 
-test = "#   Hello world"
-
-output = tokenizeHeading(test)
-print(output)
-htmlOutput = "<h" + str(output['size']) + "> " + str(output['text']) + " </h" + str(output['size']) + ">"
-print(htmlOutput)
-
-
-        
-
+output = mdTokenizer(test)
+output.tokenizeHeading(test)
+print(output.returnTokenList())
