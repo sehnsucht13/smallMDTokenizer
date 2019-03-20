@@ -33,6 +33,7 @@ class mdTokenizer:
     def __init__(self, templateText):
         self.text = templateText
         self.currIndex = 0
+        self.EOLToken = {"type": "EOL"}
         self.tokens = []
 
     def getNextLine(self):
@@ -60,6 +61,7 @@ class mdTokenizer:
 
         # Append to token list
         self.tokens.append({"type":"Heading", "size":headingSize, "text":headingText})
+        self.tokens.append(self.EOLToken)
 
     def tokenizeText(self):
         """Tokenizes a line of (for now) plain text"""
@@ -70,6 +72,7 @@ class mdTokenizer:
             self.currIndex += 1
 
         self.tokens.append({"type": "Text", "text": textContent})
+        self.tokens.append(self.EOLToken)
 
     def tokenizeLink(self):
         """Tokenizes a standard markdown link"""
@@ -124,6 +127,7 @@ class mdTokenizer:
             self.currIndex += 1
 
         self.tokens.append({"type": "Check", "status" : status, "text" : checkItemContent})
+        self.tokens.append(self.EOLToken)
 
 
          
