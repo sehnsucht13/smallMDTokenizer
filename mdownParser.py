@@ -1,10 +1,38 @@
+import re
+
+mdRegExp = {
+        'mdUndelineHeading' : "^(==+|---+|***+|___+)" 
+        }
+
+class streamSource:
+    """ Class responsible for opening a file handle to the markdown file to be
+        parsed and providing access to its components"""
+    def __init__(self, streamPath):
+        self.lineNum = 0
+        try:
+            self.fHandle = open(streamPath, 'r')
+        except PermissionError:
+            print("The file cannot be opened for reading due to a lack of permission!")
+        except FileNotFoundError:
+            print("The file requested could not be found.")
+            print("Make sure that the path is specified properly and that the file exists")
+
+    def returnLine(self):
+        self.lineNum += 1
+        return fHandle.readline()
+
+    def lookAhead(self, regExp):
+        """Checks if the beginning of the next line matches a regular expression"""
+        currLine = fHandle.readline()
+        status = re.search(regExp, currLine)
+        return status
+
+
 class mdTokenizer:
     """Class which tokenizes a markdown line"""
     def __init__(self, templateText):
         self.text = templateText
         self.currIndex = 0
-        self.lookAhead = 0
-        self.lineNum = 0
         self.tokens = []
 
     def skipWhiteSpace(self):
