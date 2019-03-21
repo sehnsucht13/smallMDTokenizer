@@ -148,6 +148,31 @@ class mdTokenizer:
             {"type": "Check", "status": status, "text": checkItemContent})
         self.tokens.append(self.EOLToken)
 
+    def isCheckItemOrBullet(self):
+        """Check if the current line is a simple list bullet or is a checkmark"""
+        # Used to look ahead in the string
+        lookAheadIndex = self.currIndex + 1
+        while(lookAheadIndex != len(self.text)):
+            if(self.text[lookAheadIndex] == '['):
+                return 1
+            lookAheadIndex += 1
+
+    def eatChars(self):
+        itemText = ""
+        while(self.text[self.currIndex] != '\n'):
+            itemText += self.text[self.currIndex]
+            self.currIndex += 1
+        return itemText
+
+    def tokenizeBullet(self):
+        # skip over + or - or *
+        self.currIndex += 1
+        self.skipWhiteSpace()
+        text = self.eatChars()
+        self.tokens.append(
+            {"type": "Bullet", "text": text}
+        )
+
     def tokenizeCodeBlock(self):
         tickCount = 0
         while(self.text[self.currIndex] == '`'):
@@ -163,25 +188,34 @@ class mdTokenizer:
         return self.tokens
 
     def tokenize(self):
+        """ General function which applies the tokenizing rules based on the context"""
         while(src.checkEOF()):
             self.text = self.src.returnLine()
             self.skipWhiteSpaceNewLine()
             if(self.text[self.currIndex] == '#'):
                 self.tokenizeHeading()
             elif(self.text[self.currIndex] == '-'):
-                self.tokenizeCheckItem()
+                if(self.isCheckItemOrBullet() == 1):
+                    self.tokenizeCheckItem()
+                else:
+                    self.tokenizeBullet()
             elif(self.text[self.currIndex] == '!'):
                 self.tokenizeImage()
             elif(self.text[self.currIndex] == '['):
                 self.tokenizeLink()
+            elif(self.text[self.currIndex] == '+'):
+                self.tokenizeBullet()
+            elif(self.text[self.currIndex] == '*'):
+                self.tokenizeBullet()
             elif(str.isalnum(self.text[self.currIndex])):
                 self.tokenizeText()
             else:
                 print("Cannot parse this string")
                 break
-
-            # some small tests below
-            #test = " -           [ ]            Here is some content for my check list item\n"
+        # Add an EOF token
+        self.tokens.append({"type": "EOF"})
+        # some small tests below
+        #test = " -           [ ]            Here is some content for my check list item\n"
 
 
 if __name__ == "__main__":
