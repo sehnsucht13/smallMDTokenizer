@@ -7,6 +7,7 @@ class mdTokenizer:
     def __init__(self, source):
         self.src = source
         self.text = ""
+        self.currChar = ''
         self.currIndex = 0
         self.EOLToken = {"type": "EOL"}
         self.tokens = []
@@ -22,13 +23,17 @@ class mdTokenizer:
         self.currIndex = 0
         self.skipWhiteSpace()
 
+    def getNextChar(self):
+        self.currChar = self.text[self.currIndex]
+        self.currIndex += 1
+        return self.currChar
+
     def eatChars(self):
         """Consumes characters and returns them to the calling function in the form of
         a list"""
         itemText = ""
-        while(self.text[self.currIndex] != '\n'):
-            itemText += self.text[self.currIndex]
-            self.currIndex += 1
+        while(self.getNextChar() != '\n'):
+            itemText += self.currChar
         return itemText
 
     def addEOL(self):
@@ -40,9 +45,9 @@ class mdTokenizer:
         # Check if the first char in stream is #
         headingSize = 0
         headingText = ""
-        while(self.text[self.currIndex] == '#'):
+        while(self.getNextChar() == '#'):
             headingSize += 1
-            self.currIndex += 1
+
         # Skip over intial whitespace
         self.skipWhiteSpace()
         # Add contents of heading
@@ -56,9 +61,8 @@ class mdTokenizer:
         """Tokenizes a line of (for now) plain text"""
         textContent = ""
         self.skipWhiteSpace()
-        while(self.text[self.currIndex] != '\n'):
-            textContent += self.text[self.currIndex]
-            self.currIndex += 1
+        while(self.getNextChar() != '\n'):
+            textContent += self.currChar
 
         self.tokens.append({"type": "Text", "text": textContent})
         self.tokens.append(self.EOLToken)
@@ -70,9 +74,8 @@ class mdTokenizer:
         self.skipWhiteSpace()
         self.currIndex += 1
         self.skipWhiteSpace()
-        while(self.text[self.currIndex] != ']'):
-            linkTitle += self.text[self.currIndex]
-            self.currIndex += 1
+        while(self.getNextChar() != ']'):
+            linkTitle += self.currChar
 
         # Skip over the ] character
         self.currIndex += 1
@@ -80,11 +83,9 @@ class mdTokenizer:
         # Skip over (
         self.currIndex += 1
         self.skipWhiteSpace()
-        while(self.text[self.currIndex] != ')'):
-            linkPath += self.text[self.currIndex]
-            self.currIndex += 1
+        while(self.getNextChar() != ')'):
+            linkPath += self.currChar
 
-        self.currIndex += 1
         self.tokens.append(
             {"type": "Link", "title": linkTitle, "path": linkPath})
 
