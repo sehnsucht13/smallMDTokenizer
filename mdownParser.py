@@ -177,10 +177,9 @@ class mdTokenizer:
             else:
                 print("Cannot parse this string")
                 break
+
         # Add an EOF token
         self.tokens.append({"type": "EOF"})
-        # some small tests below
-        #test = " -           [ ]            Here is some content for my check list item\n"
 
 
 if __name__ == "__main__":
