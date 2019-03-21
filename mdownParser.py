@@ -1,5 +1,9 @@
 from stream import streamSource
 
+mdRegExp = {
+    'mdUndelineHeading': "^(==+|---+|***+|___+)"
+}
+
 
 class mdTokenizer:
     """Class which tokenizes a markdown line"""
@@ -28,6 +32,11 @@ class mdTokenizer:
         self.currIndex += 1
         return self.currChar
 
+    def getNewLine(self):
+        self.text = self.src.returnLine()
+        self.currIndex = 0
+        self.currChar = self.text[self.currIndex]
+
     def eatChars(self):
         """Consumes characters and returns them to the calling function in the form of
         a list"""
@@ -40,7 +49,7 @@ class mdTokenizer:
         """Adds an end of line token to the token list"""
         self.tokens.append(self.EOLToken)
 
-    def tokenizeHeading(self):
+    def tokenizeMarkedHeading(self):
         """Tokenizes a standard markdown heading"""
         # Check if the first char in stream is #
         headingSize = 0
@@ -60,12 +69,21 @@ class mdTokenizer:
     def tokenizeText(self):
         """Tokenizes a line of (for now) plain text"""
         textContent = ""
-        self.skipWhiteSpace()
         while(self.getNextChar() != '\n'):
             textContent += self.currChar
 
         self.tokens.append({"type": "Text", "text": textContent})
         self.tokens.append(self.EOLToken)
+
+    def tokenizeUnmarkedHeading(self):
+        textContent = ""
+        while(self.getNextChar() != '\n'):
+            textContent += self.currChar
+        src.returnLine()
+        self.tokens.append({
+            "type": "Heading",
+            "text": textContent
+        })
 
     def tokenizeLink(self):
         """Tokenizes a standard markdown link"""
@@ -156,10 +174,12 @@ class mdTokenizer:
     def tokenize(self):
         """ General function which applies the tokenizing rules based on the context"""
         while(src.checkEOF()):
-            self.text = self.src.returnLine()
+            self.getNewLine()
             self.skipWhiteSpaceNewLine()
             if(self.text[self.currIndex] == '#'):
-                self.tokenizeHeading()
+                self.tokenizeMarkedHeading()
+            elif(src.lookAhead("^(-{2,}|={2,})")):
+                self.tokenizeUnmarkedHeading()
             elif(self.text[self.currIndex] == '-'):
                 if(self.isCheckItemOrBullet() == 1):
                     self.tokenizeCheckItem()
@@ -173,7 +193,7 @@ class mdTokenizer:
                 self.tokenizeBullet()
             elif(self.text[self.currIndex] == '*'):
                 self.tokenizeBullet()
-            elif(str.isalnum(self.text[self.currIndex])):
+            elif(str.isalnum(self.currChar)):
                 self.tokenizeText()
             else:
                 print("Cannot parse this string")

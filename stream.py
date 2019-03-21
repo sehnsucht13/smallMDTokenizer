@@ -35,6 +35,8 @@ class streamSource:
 
     def lookAhead(self, regExp):
         """Checks if the beginning of the next line matches a regular expression"""
+        pos = self.fHandle.tell()
         currLine = self.fHandle.readline()
         status = re.search(regExp, currLine)
+        self.fHandle.seek(pos)
         return status
