@@ -23,11 +23,13 @@ class mdTokenizer:
         self.skipWhiteSpace()
 
     def getNextChar(self):
+        """ Return the next character """
         self.currChar = self.text[self.currIndex]
         self.currIndex += 1
         return self.currChar
 
     def getNewLine(self):
+        """ Get and set the next line from the source file """
         self.text = self.src.returnLine()
         self.currIndex = 0
         self.currChar = self.text[self.currIndex]
@@ -71,6 +73,7 @@ class mdTokenizer:
         self.addEOL()
 
     def tokenizeUnmarkedHeading(self):
+        """ Tokenize headings which are underlined """
         textContent = ""
         while(self.getNextChar() != '\n'):
             textContent += self.currChar
@@ -111,6 +114,8 @@ class mdTokenizer:
         self.tokenizeLink()
 
     def tokenizeCheckItem(self):
+        """ Tokenize a checklist item of the form:
+            - [ ] ITEM """
         status = None
         checkItemContent = ""
         self.skipWhiteSpace()
@@ -145,6 +150,7 @@ class mdTokenizer:
             lookAheadIndex += 1
 
     def tokenizeBullet(self):
+        """ Tokenize a markdown bullet """
         # skip over + or - or *
         self.currIndex += 1
         self.skipWhiteSpace()
@@ -154,6 +160,7 @@ class mdTokenizer:
         )
 
     def tokenizeCodeBlock(self):
+        """ Tokenize a code block """
         tickCount = 0
         while(self.text[self.currIndex] == '`'):
             tickCount += 1
@@ -165,6 +172,7 @@ class mdTokenizer:
             print("Malformed code block\n")
 
     def returnTokenList(self):
+        """ Return the list of tokens """
         return self.tokens
 
     def tokenize(self):

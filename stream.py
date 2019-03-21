@@ -1,15 +1,12 @@
 import re
 
-mdRegExp = {
-    'mdUndelineHeading': "^(==+|---+|***+|___+)"
-}
-
 
 class streamSource:
     """ Class responsible for opening a file handle to the markdown file to be
         parsed and providing access to its components"""
 
     def __init__(self, streamPath):
+        # hold the current line number in case of any errors
         self.lineNum = 0
         try:
             self.fHandle = open(streamPath, 'r')
@@ -27,10 +24,12 @@ class streamSource:
                 "Make sure that the path is specified properly and that the file exists")
 
     def returnLine(self):
+        """ Return the next line of text from the source file """
         self.lineNum += 1
         return self.fHandle.readline()
 
     def checkEOF(self):
+        """ Check if the end of file is reached """
         return not (self.fHandle.tell() == self.eof)
 
     def lookAhead(self, regExp):
