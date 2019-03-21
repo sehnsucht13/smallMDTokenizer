@@ -56,9 +56,22 @@ class mdTokenizer:
             self.currIndex += 1
 
     def skipWhiteSpaceNewLine(self):
+        """Resets the current index and consumes whitespace until a character is reached"""
         # Reset current index
         self.currIndex = 0
         self.skipWhiteSpace()
+
+    def eatChars(self):
+        """Consumes characters and returns them to the calling function"""
+        itemText = ""
+        while(self.text[self.currIndex] != '\n'):
+            itemText += self.text[self.currIndex]
+            self.currIndex += 1
+        return itemText
+
+    def addEOL(self):
+        """Adds an end of line token to the token list"""
+        self.tokens.append(self.EOLToken)
 
     def tokenizeHeading(self):
         """Tokenizes a standard markdown heading"""
@@ -71,14 +84,11 @@ class mdTokenizer:
         # Skip over intial whitespace
         self.skipWhiteSpace()
         # Add contents of heading
-        while(self.text[self.currIndex] != '\n'):
-            headingText += self.text[self.currIndex]
-            self.currIndex += 1
-
+        headingText = self.eatChars()
         # Append to token list
         self.tokens.append(
             {"type": "Heading", "size": headingSize, "text": headingText})
-        self.tokens.append(self.EOLToken)
+        self.addEOL()
 
     def tokenizeText(self):
         """Tokenizes a line of (for now) plain text"""
@@ -156,13 +166,6 @@ class mdTokenizer:
             if(self.text[lookAheadIndex] == '['):
                 return 1
             lookAheadIndex += 1
-
-    def eatChars(self):
-        itemText = ""
-        while(self.text[self.currIndex] != '\n'):
-            itemText += self.text[self.currIndex]
-            self.currIndex += 1
-        return itemText
 
     def tokenizeBullet(self):
         # skip over + or - or *
