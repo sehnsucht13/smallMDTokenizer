@@ -1,9 +1,5 @@
 from stream import streamSource
 
-mdRegExp = {
-    'mdUndelineHeading': "^(==+|---+|***+|___+)"
-}
-
 
 class mdTokenizer:
     """Class which tokenizes a markdown line"""
@@ -13,7 +9,6 @@ class mdTokenizer:
         self.text = ""
         self.currChar = ''
         self.currIndex = 0
-        self.EOLToken = {"type": "EOL"}
         self.tokens = []
 
     def skipWhiteSpace(self):
@@ -47,7 +42,7 @@ class mdTokenizer:
 
     def addEOL(self):
         """Adds an end of line token to the token list"""
-        self.tokens.append(self.EOLToken)
+        self.tokens.append({"type": "EOL"})
 
     def tokenizeMarkedHeading(self):
         """Tokenizes a standard markdown heading"""
@@ -73,7 +68,7 @@ class mdTokenizer:
             textContent += self.currChar
 
         self.tokens.append({"type": "Text", "text": textContent})
-        self.tokens.append(self.EOLToken)
+        self.addEOL()
 
     def tokenizeUnmarkedHeading(self):
         textContent = ""
@@ -84,6 +79,7 @@ class mdTokenizer:
             "type": "Heading",
             "text": textContent
         })
+        self.addEOL()
 
     def tokenizeLink(self):
         """Tokenizes a standard markdown link"""
@@ -137,7 +133,7 @@ class mdTokenizer:
 
         self.tokens.append(
             {"type": "Check", "status": status, "text": checkItemContent})
-        self.tokens.append(self.EOLToken)
+        self.addEOL()
 
     def isCheckItemOrBullet(self):
         """Check if the current line is a simple list bullet or is a checkmark"""
@@ -195,10 +191,10 @@ class mdTokenizer:
                 self.tokenizeBullet()
             elif(str.isalnum(self.currChar)):
                 self.tokenizeText()
+            elif(len(self.text) == 0):
+                self.tokens.append({"type": "BLANK"})
             else:
-                print("Cannot parse this string")
-                break
-
+                pass
         # Add an EOF token
         self.tokens.append({"type": "EOF"})
 
