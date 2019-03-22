@@ -1,2 +1,2 @@
-# mdParser
-A small markdown parser
+# smallMDParser
+This is a small parser for markdown. Work in progress
