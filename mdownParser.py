@@ -28,19 +28,63 @@ class mdTokenizer:
         self.currIndex += 1
         return self.currChar
 
+    def peekNextChar(self):
+        """ Return the next character """
+        return self.text[self.currIndex + 1]
+
     def getNewLine(self):
         """ Get and set the next line from the source file """
         self.text = self.src.returnLine()
         self.currIndex = 0
         self.currChar = self.text[self.currIndex]
 
-    def eatChars(self):
+    def eatCharsPlain(self):
         """Consumes characters and returns them to the calling function in the form of
-        a list"""
+        a string. This function assumes that what is to be consumed is only plain 
+        characters without any markup. Used for headings"""
         itemText = ""
         while(self.getNextChar() != '\n'):
             itemText += self.currChar
         return itemText
+
+    def eatCharsMarkup(self):
+        while(self.currChar != '\n'):
+            textArr = []
+            # Case of bold text like **WORD**
+            if(self.currChar == "*" and self.peekNextChar() == "*"):
+                boldText = ""
+                # Skip over the following *
+                self.getNextChar()
+                self.getNextChar()
+                while(self.currChar != "*"):
+                    boldText += self.currChar
+                    self.getNextChar()
+
+                # at this point, currChar is on the first closing *
+                # Move to second *
+                self.getNextChar()
+                # Now skipped over ** completely
+                self.getNextChar()
+                # Add token for bolded text
+                textArr.append({
+                    "type" : "Text",
+                    "markup" : "B",
+                    "text" : boldText
+                    })
+
+            # Case of italic text like *WORD*
+            elif(self.currChar == "*"):
+                italicText = ""
+                # Skip over to next character
+                self.getNextChar()
+                while(self.currChar != "*"):
+                    italicText += self.currChar
+                    self.getNextChar()
+
+
+
+            textContent += self.currChar
+        
 
     def addEOL(self):
         """Adds an end of line token to the token list"""
@@ -57,7 +101,7 @@ class mdTokenizer:
         # Skip over intial whitespace
         self.skipWhiteSpace()
         # Add contents of heading
-        headingText = self.eatChars()
+        headingText = self.eatCharsPlain()
         # Append to token list
         self.tokens.append(
             {"type": "Heading", "size": headingSize, "text": headingText})
@@ -66,8 +110,6 @@ class mdTokenizer:
     def tokenizeText(self):
         """Tokenizes a line of (for now) plain text"""
         textContent = ""
-        while(self.getNextChar() != '\n'):
-            textContent += self.currChar
 
         self.tokens.append({"type": "Text", "text": textContent})
         self.addEOL()
