@@ -24,13 +24,13 @@ class mdTokenizer:
 
     def getNextChar(self):
         """ Return the next character """
-        self.currChar = self.text[self.currIndex]
         self.currIndex += 1
+        self.currChar = self.text[self.currIndex]
         return self.currChar
 
     def peekNextChar(self):
         """ Return the next character """
-        return self.text[self.currIndex]
+        return self.text[self.currIndex + 1]
 
     def getNewLine(self):
         """ Get and set the next line from the source file """
@@ -52,7 +52,6 @@ class mdTokenizer:
         while(self.currChar != '\n'):
             # Case of bold text like **WORD**
             if(self.currChar == "*" and self.peekNextChar() == "*"):
-                print("Detected double bold")
                 boldText = ""
                 # Skip over the following *
                 self.getNextChar()
@@ -66,16 +65,15 @@ class mdTokenizer:
                 self.getNextChar()
                 # Now skipped over ** completely
                 self.getNextChar()
+
                 # Add token for bolded text
                 textArr.append({
-                    "type" : "Text",
                     "markup" : "B",
-                    "text" : boldText
+                    "content" : boldText
                     })
 
             # Case of italic text like *WORD*
             elif(self.currChar == "*"):
-                print("Detected single italic")
                 italicText = ""
                 # Skip over to next character
                 self.getNextChar()
@@ -84,22 +82,24 @@ class mdTokenizer:
                     self.getNextChar()
                 # At this point, currChar is on a *
                 self.getNextChar()
-                print("Here is the char " + self.currChar)
+
+                # Add token for italic text
                 textArr.append({
-                    "type" : "Text",
                     "markup" : "I",
-                    "text" : italicText
+                    "content" : italicText
                     })
+
             # Default case for plain text
             else:
                 plainText = ""
                 while self.currChar != '\n' and self.currChar != '*':
                     plainText += self.currChar
                     self.getNextChar()
+
+                # Add token for plain text
                 textArr.append({
-                    "type" : "Text",
                     "markup" : "P",
-                    "text" : plainText
+                    "content" : plainText
                     })
 
         return textArr
@@ -123,13 +123,13 @@ class mdTokenizer:
         headingText = self.eatCharsPlain()
         # Append to token list
         self.tokens.append(
-            {"type": "Heading", "size": headingSize, "text": headingText})
+            {"type": "Heading", "size": headingSize, "content": headingText})
         self.addEOL()
 
     def tokenizeText(self):
         """Tokenizes a line of (for now) plain text"""
         textContent = self.eatCharsMarkup()
-        self.tokens.append({"type": "Text", "text": textContent})
+        self.tokens.append({"type": "Text", "content": textContent})
         self.addEOL()
 
     def tokenizeUnmarkedHeading(self):
@@ -137,10 +137,11 @@ class mdTokenizer:
         textContent = ""
         while(self.getNextChar() != '\n'):
             textContent += self.currChar
+        # skip over the next line since it is useless to parse
         src.returnLine()
         self.tokens.append({
             "type": "Heading",
-            "text": textContent
+            "content": textContent
         })
         self.addEOL()
 
@@ -197,7 +198,7 @@ class mdTokenizer:
             self.currIndex += 1
 
         self.tokens.append(
-            {"type": "Check", "status": status, "text": checkItemContent})
+            {"type": "Check", "status": status, "content": checkItemContent})
         self.addEOL()
 
     def isCheckItemOrBullet(self):
@@ -216,7 +217,7 @@ class mdTokenizer:
         self.skipWhiteSpace()
         text = self.eatChars()
         self.tokens.append(
-            {"type": "Bullet", "text": text}
+            {"type": "Bullet", "content": text}
         )
 
     def tokenizeCodeBlock(self):
@@ -282,6 +283,7 @@ class mdTokenizer:
             # Unhandled case
             else:
                 pass
+
         # Add an EOF token
         self.tokens.append({"type": "EOF"})
 
