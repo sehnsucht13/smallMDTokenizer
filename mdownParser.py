@@ -30,7 +30,7 @@ class mdTokenizer:
 
     def peekNextChar(self):
         """ Return the next character """
-        return self.text[self.currIndex + 1]
+        return self.text[self.currIndex]
 
     def getNewLine(self):
         """ Get and set the next line from the source file """
@@ -48,10 +48,11 @@ class mdTokenizer:
         return itemText
 
     def eatCharsMarkup(self):
+        textArr = []
         while(self.currChar != '\n'):
-            textArr = []
             # Case of bold text like **WORD**
             if(self.currChar == "*" and self.peekNextChar() == "*"):
+                print("Detected double bold")
                 boldText = ""
                 # Skip over the following *
                 self.getNextChar()
@@ -74,6 +75,7 @@ class mdTokenizer:
 
             # Case of italic text like *WORD*
             elif(self.currChar == "*"):
+                print("Detected single italic")
                 italicText = ""
                 # Skip over to next character
                 self.getNextChar()
@@ -82,6 +84,7 @@ class mdTokenizer:
                     self.getNextChar()
                 # At this point, currChar is on a *
                 self.getNextChar()
+                print("Here is the char " + self.currChar)
                 textArr.append({
                     "type" : "Text",
                     "markup" : "I",
@@ -90,7 +93,7 @@ class mdTokenizer:
             # Default case for plain text
             else:
                 plainText = ""
-                while(self.currChar != "*"):
+                while self.currChar != '\n' and self.currChar != '*':
                     plainText += self.currChar
                     self.getNextChar()
                 textArr.append({
@@ -125,8 +128,7 @@ class mdTokenizer:
 
     def tokenizeText(self):
         """Tokenizes a line of (for now) plain text"""
-        textContent = ""
-
+        textContent = self.eatCharsMarkup()
         self.tokens.append({"type": "Text", "text": textContent})
         self.addEOL()
 
@@ -238,27 +240,46 @@ class mdTokenizer:
         while(src.checkEOF()):
             self.getNewLine()
             self.skipWhiteSpaceNewLine()
+            # Standard heading starting with #
             if(self.text[self.currIndex] == '#'):
+                print("Tripped test 1")
                 self.tokenizeMarkedHeading()
-            elif(src.lookAhead("^(-{2,}|={2,})")):
+            # Underlined heading
+            elif(src.lookAheadLineTest("^(-{2,}|={2,})")):
+                print("Tripped test 2")
                 self.tokenizeUnmarkedHeading()
+            # Either a bullet or checklist item
             elif(self.text[self.currIndex] == '-'):
+                print("Tripped test 3")
                 if(self.isCheckItemOrBullet() == 1):
                     self.tokenizeCheckItem()
                 else:
                     self.tokenizeBullet()
+            # Image link 
             elif(self.text[self.currIndex] == '!'):
+                print("Tripped test 4")
                 self.tokenizeImage()
+            # Normal link
             elif(self.text[self.currIndex] == '['):
+                print("Tripped test 5")
                 self.tokenizeLink()
+            # Bullet
             elif(self.text[self.currIndex] == '+'):
+                print("Tripped test 6")
                 self.tokenizeBullet()
-            elif(self.text[self.currIndex] == '*'):
+            # Bullet
+            elif(self.text[self.currIndex] == '*' and self.peekNextChar() == " "):
+                print("Tripped test 7")
                 self.tokenizeBullet()
+            # Plain sentence
             elif(str.isalnum(self.currChar)):
+                print("Tripped test 8")
                 self.tokenizeText()
+            # Blank line
             elif(len(self.text) == 0):
+                print("Tripped test BLANK")
                 self.tokens.append({"type": "BLANK"})
+            # Unhandled case
             else:
                 pass
         # Add an EOF token
