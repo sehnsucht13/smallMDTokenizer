@@ -32,6 +32,15 @@ class mdTokenizer:
         """ Return the next character """
         return self.text[self.currIndex + 1]
 
+    def checkEmptyLine(self):
+        if(self.currChar == '\n'):
+            return True
+        return False
+
+    def addEOL(self):
+        """Adds an end of line token to the token list"""
+        self.tokens.append({"type": "EOL"})
+
     def getNewLine(self):
         """ Get and set the next line from the source file """
         self.text = self.src.returnLine()
@@ -43,8 +52,9 @@ class mdTokenizer:
         a string. This function assumes that what is to be consumed is only plain 
         characters without any markup. Used for headings"""
         itemText = ""
-        while(self.getNextChar() != '\n'):
+        while(self.currChar != '\n'):
             itemText += self.currChar
+            self.getNextChar()
         return itemText
 
     def eatCharsMarkup(self):
@@ -105,9 +115,6 @@ class mdTokenizer:
         return textArr
         
 
-    def addEOL(self):
-        """Adds an end of line token to the token list"""
-        self.tokens.append({"type": "EOL"})
 
     def tokenizeMarkedHeading(self):
         """Tokenizes a standard markdown heading"""
@@ -220,15 +227,41 @@ class mdTokenizer:
             {"type": "Bullet", "content": text}
         )
 
+    # TODO Check if block is properly formatted
     def tokenizeCodeBlock(self):
         """ Tokenize a code block """
         tickCount = 0
-        while(self.text[self.currIndex] == '`'):
+        lang = ""
+        codeBlockContent = []
+        while(self.currChar == '`'):
             tickCount += 1
-            self.currIndex += 1
+            self.getNextChar()
         if(tickCount == 3):
+            # Consume language
+            lang = self.eatCharsPlain()
             # get next line
-            pass
+            self.getNewLine()
+            while self.currChar != '`':
+                if self.checkEmptyLine():
+                    print("Detected blank line")
+                    codeBlockContent.append({
+                        "type" : "BLANK"
+                        })
+                else:
+                    # Consume entire line
+                    lineContent = self.eatCharsPlain()
+                    codeBlockContent.append({
+                            "line" : lineContent    
+                        })
+                self.getNewLine()
+
+            # At this point, we have a line with the form of ```
+            self.tokens.append({
+                    "type" : "CBlock",
+                    "lang" : lang,
+                    "content" : codeBlockContent
+                })
+
         else:
             print("Malformed code block\n")
 
@@ -272,6 +305,9 @@ class mdTokenizer:
             elif(self.text[self.currIndex] == '*' and self.peekNextChar() == " "):
                 print("Tripped test 7")
                 self.tokenizeBullet()
+            elif(self.currChar == '`'):
+                print("Tripped test for code block")
+                self.tokenizeCodeBlock()
             # Plain sentence
             elif(str.isalnum(self.currChar)):
                 print("Tripped test 8")
