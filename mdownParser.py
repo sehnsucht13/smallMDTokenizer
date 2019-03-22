@@ -80,10 +80,26 @@ class mdTokenizer:
                 while(self.currChar != "*"):
                     italicText += self.currChar
                     self.getNextChar()
+                # At this point, currChar is on a *
+                self.getNextChar()
+                textArr.append({
+                    "type" : "Text",
+                    "markup" : "I",
+                    "text" : italicText
+                    })
+            # Default case for plain text
+            else:
+                plainText = ""
+                while(self.currChar != "*"):
+                    plainText += self.currChar
+                    self.getNextChar()
+                textArr.append({
+                    "type" : "Text",
+                    "markup" : "P",
+                    "text" : plainText
+                    })
 
-
-
-            textContent += self.currChar
+        return textArr
         
 
     def addEOL(self):
