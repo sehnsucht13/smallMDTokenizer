@@ -1,4 +1,5 @@
 from stream import streamSource
+import sys # used to exit program when an undesirable state occurs
 
 
 class mdTokenizer:
@@ -33,7 +34,8 @@ class mdTokenizer:
         return self.text[self.currIndex + 1]
 
     def checkEmptyLine(self):
-        if(self.currChar == '\n'):
+        """Check if the current line is an empty line"""
+        if(self.currChar == '\n' or self.currChar == '\r'): 
             return True
         return False
 
@@ -247,13 +249,26 @@ class mdTokenizer:
                     codeBlockContent.append({
                         "type" : "BLANK"
                         })
+                    print("Got to here")
+                    self.getNewLine()
                 else:
                     # Consume entire line
                     lineContent = self.eatCharsPlain()
                     codeBlockContent.append({
                             "line" : lineContent    
                         })
-                self.getNewLine()
+                    print("Got to else")
+                    self.getNewLine()
+            
+            tickCount = 0
+            while self.currChar == '`':
+                tickCount += 1
+                self.getNextChar()
+                
+            # Case of malformed block
+            if tickCount != 3:
+                errString = """Malformed code block ending at line: {}\nMissing {} tickmark""".format(src.getLineNum(), (3 - tickCount))
+                sys.exit(errString)
 
             # At this point, we have a line with the form of ```
             self.tokens.append({
@@ -263,7 +278,8 @@ class mdTokenizer:
                 })
 
         else:
-            print("Malformed code block\n")
+            errString = "Error recognizing markdown syntax at line number: {} ".format(src.getLineNum) 
+            sys.exit(errString)
 
     def returnTokenList(self):
         """ Return the list of tokens """
@@ -313,7 +329,7 @@ class mdTokenizer:
                 print("Tripped test 8")
                 self.tokenizeText()
             # Blank line
-            elif(len(self.text) == 0):
+            elif(self.checkEmptyLine()):
                 print("Tripped test BLANK")
                 self.tokens.append({"type": "BLANK"})
             # Unhandled case

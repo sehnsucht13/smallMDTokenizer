@@ -31,6 +31,9 @@ class streamSource:
     def checkEOF(self):
         """ Check if the end of file is reached """
         return not (self.fHandle.tell() == self.eof)
+    
+    def getLineNum(self):
+        return self.lineNum
 
     def lookAheadLineTest(self, regExp):
         """Checks if the beginning of the next line matches a regular expression"""
