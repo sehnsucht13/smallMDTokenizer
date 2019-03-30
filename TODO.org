@@ -1,0 +1,10 @@
+* Todo
+- [ ] Create functions retrieve a token and its properties
+- [ ] Support blocks and block tokens
+- [ ] Parse syntax for crossing out content
+- [ ] Handle text quotes
+- [ ] Handle numbered lists which are indented(list within a list)
+- [ ] Handle inline code(something like `this`)
+- [ ] Handle escapes
+- [ ] Add more comments
+- [ ] Clean up functions
