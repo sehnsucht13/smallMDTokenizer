@@ -1,15 +1,20 @@
 from stream import streamSource
-import sys # used to exit program when an undesirable state occurs
+import sys  # used to exit program when an undesirable state occurs
 
 
 class mdTokenizer:
     """Class which tokenizes a markdown line"""
 
     def __init__(self, source):
+        # Holds a handle to the source class which restricts access to the source file
         self.src = source
+        # The current line of text
         self.text = ""
+        # The current character
         self.currChar = ''
+        # Current index along the line
         self.currIndex = 0
+        # The list of tokens
         self.tokens = []
 
     def skipWhiteSpace(self):
@@ -18,13 +23,13 @@ class mdTokenizer:
             self.currIndex += 1
 
     def skipWhiteSpaceNewLine(self):
-        """Resets the current index and consumes whitespace until a character is reached"""
+        """Resets the current index and consumes whitespace until an any character which is not space is reached"""
         # Reset current index
         self.currIndex = 0
         self.skipWhiteSpace()
 
     def getNextChar(self):
-        """ Return the next character """
+        """ Return the next character in the current line"""
         self.currIndex += 1
         self.currChar = self.text[self.currIndex]
         return self.currChar
@@ -35,7 +40,7 @@ class mdTokenizer:
 
     def checkEmptyLine(self):
         """Check if the current line is an empty line"""
-        if(self.currChar == '\n' or self.currChar == '\r'): 
+        if(self.currChar == '\n' or self.currChar == '\r'):
             return True
         return False
 
@@ -51,7 +56,7 @@ class mdTokenizer:
 
     def eatCharsPlain(self):
         """Consumes characters and returns them to the calling function in the form of
-        a string. This function assumes that what is to be consumed is only plain 
+        a string. This function assumes that what is to be consumed is only plain
         characters without any markup. Used for headings"""
         itemText = ""
         while(self.currChar != '\n'):
@@ -60,6 +65,7 @@ class mdTokenizer:
         return itemText
 
     def eatCharsMarkup(self):
+        """Consume characters which are using some type of markup such as * or **"""
         textArr = []
         while(self.currChar != '\n'):
             # Case of bold text like **WORD**
@@ -80,9 +86,9 @@ class mdTokenizer:
 
                 # Add token for bolded text
                 textArr.append({
-                    "markup" : "B",
-                    "content" : boldText
-                    })
+                    "markup": "B",
+                    "content": boldText
+                })
 
             # Case of italic text like *WORD*
             elif(self.currChar == "*"):
@@ -92,14 +98,14 @@ class mdTokenizer:
                 while(self.currChar != "*"):
                     italicText += self.currChar
                     self.getNextChar()
-                # At this point, currChar is on a *
+                # At this point, currChar is on a * so we skip to the next char
                 self.getNextChar()
 
                 # Add token for italic text
                 textArr.append({
-                    "markup" : "I",
-                    "content" : italicText
-                    })
+                    "markup": "I",
+                    "content": italicText
+                })
 
             # Default case for plain text
             else:
@@ -110,13 +116,11 @@ class mdTokenizer:
 
                 # Add token for plain text
                 textArr.append({
-                    "markup" : "P",
-                    "content" : plainText
-                    })
+                    "markup": "P",
+                    "content": plainText
+                })
 
         return textArr
-        
-
 
     def tokenizeMarkedHeading(self):
         """Tokenizes a standard markdown heading"""
@@ -159,16 +163,16 @@ class mdTokenizer:
         linkTitle = ""
         linkPath = ""
         self.skipWhiteSpace()
-        self.currIndex += 1
+        self.getNextChar()
         self.skipWhiteSpace()
         while(self.getNextChar() != ']'):
             linkTitle += self.currChar
 
         # Skip over the ] character
-        self.currIndex += 1
+        self.getNextChar()
         self.skipWhiteSpace()
         # Skip over (
-        self.currIndex += 1
+        self.getNextChar()
         self.skipWhiteSpace()
         while(self.getNextChar() != ')'):
             linkPath += self.currChar
@@ -179,32 +183,32 @@ class mdTokenizer:
     def tokenizeImage(self):
         """ Tokenizes an image link """
         # skip over the ! char which indicates that it is an image
-        self.currIndex += 1
+        self.getNextChar()
         # The image link in standard markdown is just like the standard link
         self.tokenizeLink()
 
     def tokenizeCheckItem(self):
-        """ Tokenize a checklist item of the form:
+        """ Tokenize a checklist item of the form:\n
             - [ ] ITEM """
         status = None
         checkItemContent = ""
         self.skipWhiteSpace()
         # Skip over the -
-        self.currIndex += 1
+        self.getNextChar()
         self.skipWhiteSpace()
         # Skip over [
-        self.currIndex += 1
+        self.getNextChar()
 
         if(self.text[self.currIndex] == 'x'):
             status = True
 
         # Skip over ]
-        self.currIndex += 1
-        self.currIndex += 1
+        self.getNextChar()
+        self.getNextChar()
         self.skipWhiteSpace()
-        while(self.text[self.currIndex] != '\n'):
-            checkItemContent += self.text[self.currIndex]
-            self.currIndex += 1
+        while(self.currChar != '\n'):
+            checkItemContent += self.currChar
+            self.getNextChar()
 
         self.tokens.append(
             {"type": "Check", "status": status, "content": checkItemContent})
@@ -222,6 +226,7 @@ class mdTokenizer:
     def tokenizeBullet(self):
         """ Tokenize a markdown bullet """
         # skip over + or - or *
+        self.getNextChar()
         self.currIndex += 1
         self.skipWhiteSpace()
         text = self.eatChars()
@@ -231,7 +236,7 @@ class mdTokenizer:
 
     # TODO Check if block is properly formatted
     def tokenizeCodeBlock(self):
-        """ Tokenize a code block """
+        """ Tokenize a code block. """
         tickCount = 0
         lang = ""
         codeBlockContent = []
@@ -247,38 +252,40 @@ class mdTokenizer:
                 if self.checkEmptyLine():
                     print("Detected blank line")
                     codeBlockContent.append({
-                        "type" : "BLANK"
-                        })
+                        "type": "BLANK"
+                    })
                     print("Got to here")
                     self.getNewLine()
                 else:
                     # Consume entire line
                     lineContent = self.eatCharsPlain()
                     codeBlockContent.append({
-                            "line" : lineContent    
-                        })
+                        "line": lineContent
+                    })
                     print("Got to else")
                     self.getNewLine()
-            
+
             tickCount = 0
             while self.currChar == '`':
                 tickCount += 1
                 self.getNextChar()
-                
+
             # Case of malformed block
             if tickCount != 3:
-                errString = """Malformed code block ending at line: {}\nMissing {} tickmark""".format(src.getLineNum(), (3 - tickCount))
+                errString = """Malformed code block ending at line: {}\nMissing {} tickmark""".format(
+                    src.getLineNum(), (3 - tickCount))
                 sys.exit(errString)
 
             # At this point, we have a line with the form of ```
             self.tokens.append({
-                    "type" : "CBlock",
-                    "lang" : lang,
-                    "content" : codeBlockContent
-                })
+                "type": "CBlock",
+                "lang": lang,
+                "content": codeBlockContent
+            })
 
         else:
-            errString = "Error recognizing markdown syntax at line number: {} ".format(src.getLineNum) 
+            errString = "Error recognizing markdown syntax at line number: {} ".format(
+                src.getLineNum)
             sys.exit(errString)
 
     def returnTokenList(self):
@@ -305,7 +312,7 @@ class mdTokenizer:
                     self.tokenizeCheckItem()
                 else:
                     self.tokenizeBullet()
-            # Image link 
+            # Image link
             elif(self.text[self.currIndex] == '!'):
                 print("Tripped test 4")
                 self.tokenizeImage()
@@ -340,6 +347,7 @@ class mdTokenizer:
         self.tokens.append({"type": "EOF"})
 
 
+# temp test
 if __name__ == "__main__":
     src = streamSource("test.md")
     tok = mdTokenizer(src)
