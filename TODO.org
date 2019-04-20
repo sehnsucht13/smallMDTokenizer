@@ -1,10 +1,15 @@
 * Todo
 - [ ] Create functions retrieve a token and its properties
 - [ ] Support blocks and block tokens
+- [ ] Support horizontal rules in all 3 types
 - [ ] Parse syntax for crossing out content
-- [ ] Handle text quotes
 - [ ] Handle numbered lists which are indented(list within a list)
+- [ ] Handle numbered lists and lists using - or +
+- [ ] Handle block quotes
+- [ ] Handle underscores for italic and bold markup
 - [ ] Handle inline code(something like `this`)
 - [ ] Handle escapes
-- [ ] Add more comments
+- [ ] Handle line breaks(\, double space or <br>)
+- [ ] Fix bug with heading content not being saved properly
+- [x] Add more comments
 - [ ] Clean up functions
