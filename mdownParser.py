@@ -27,10 +27,8 @@ class tokType(Enum):
     UHEADING = 2
     # Checkmark
     CHECKMARK = 3
-    # Image link
-    IMGLINK = 4
     # Regular link(anything but an image link)
-    REGLINK = 5
+    LINK = 5
     # Plain text in a heading. No markup is recognized
     PLAINTEXT = 6
     # Marked up text
@@ -45,6 +43,10 @@ class tokType(Enum):
     CBLOCK = 11
     # Blank line
     BLANK = 12
+    # Italic
+    ITALIC = 13
+    # Bold
+    BOLD = 14
 
 
 class mdTokenizer:
@@ -94,7 +96,7 @@ class mdTokenizer:
 
     def addEOL(self):
         """Adds an end of line token to the token list"""
-        self.tokens.append({"type": "EOL"})
+        self.tokens.append({"type": tokType.EOL})
 
     def getNewLine(self):
         """ Get and set the next line from the source file """
@@ -135,7 +137,7 @@ class mdTokenizer:
                 # Add token for bolded text
                 textArr.append({
                     "markup": "B",
-                    "content": boldText
+                    "content": tokType.BOLD
                 })
 
             # Case of italic text like *WORD*
@@ -152,7 +154,7 @@ class mdTokenizer:
                 # Add token for italic text
                 textArr.append({
                     "markup": "I",
-                    "content": italicText
+                    "content": tokType.ITALIC
                 })
 
             # Default case for plain text
@@ -165,7 +167,7 @@ class mdTokenizer:
                 # Add token for plain text
                 textArr.append({
                     "markup": "P",
-                    "content": plainText
+                    "content": tokType.PLAINTEXT
                 })
 
         return textArr
@@ -184,7 +186,7 @@ class mdTokenizer:
         headingText = self.eatCharsPlain()
         # Append to token list
         self.tokens.append(
-            {"type": "Heading", "size": headingSize, "content": headingText})
+            {"type": tokType.MHEADING, "size": headingSize, "content": headingText})
         self.addEOL()
 
     def tokenizeText(self):
@@ -201,7 +203,7 @@ class mdTokenizer:
         # skip over the next line since it is useless to parse
         src.returnLine()
         self.tokens.append({
-            "type": "Heading",
+            "type": tokType.UHEADING,
             "content": textContent
         })
         self.addEOL()
@@ -226,7 +228,7 @@ class mdTokenizer:
             linkPath += self.currChar
 
         self.tokens.append(
-            {"type": "Link", "title": linkTitle, "path": linkPath})
+            {"type": tokType.LINK, "title": linkTitle, "path": linkPath})
 
     def tokenizeImage(self):
         """ Tokenizes an image link """
@@ -259,7 +261,7 @@ class mdTokenizer:
             self.getNextChar()
 
         self.tokens.append(
-            {"type": "Check", "status": status, "content": checkItemContent})
+            {"type": tokType.CHECKMARK, "status": status, "content": checkItemContent})
         self.addEOL()
 
     def isCheckItemOrBullet(self):
@@ -279,7 +281,7 @@ class mdTokenizer:
         self.skipWhiteSpace()
         text = self.eatCharsMarkup()
         self.tokens.append(
-            {"type": "Bullet", "content": text}
+            {"type": tokType.BULLET, "content": text}
         )
 
     # TODO Check if block is properly formatted
@@ -326,7 +328,7 @@ class mdTokenizer:
 
             # At this point, we have a line with the form of ```
             self.tokens.append({
-                "type": "CBlock",
+                "type": tokType.CBLOCK,
                 "lang": lang,
                 "content": codeBlockContent
             })
@@ -386,7 +388,7 @@ class mdTokenizer:
             # Blank line
             elif(self.checkEmptyLine()):
                 print("Tripped test BLANK")
-                self.tokens.append({"type": "BLANK"})
+                self.tokens.append({"type": tokType.BLANK})
             # Unhandled case
             else:
                 pass
