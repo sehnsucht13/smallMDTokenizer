@@ -16,14 +16,44 @@
 #
 
 from stream import streamSource
-import sys  # used to exit program when an undesirable state occurs
+import sys   # used to exit program when an undesirable state occurs
+from enum import Enum
+
+
+class tokType(Enum):
+    # Heading starting with a #
+    MHEADING = 1
+    # Underlined heading
+    UHEADING = 2
+    # Checkmark
+    CHECKMARK = 3
+    # Image link
+    IMGLINK = 4
+    # Regular link(anything but an image link)
+    REGLINK = 5
+    # Plain text in a heading. No markup is recognized
+    PLAINTEXT = 6
+    # Marked up text
+    MARKUPTEXT = 7
+    # Bullet mark
+    BULLET = 8
+    # End of line
+    EOL = 9
+    # End of file
+    EOF = 10
+    # Code block
+    CBLOCK = 11
+    # Blank line
+    BLANK = 12
 
 
 class mdTokenizer:
-    """Class which tokenizes a markdown line"""
+    """Class which tokenizes a markdown file by iterating through it line
+    by line"""
 
     def __init__(self, source):
-        # Holds a handle to the source class which restricts access to the source file
+        # Holds a handle to the source class which restricts access to the
+        # source file
         self.src = source
         # The current line of text
         self.text = ""
@@ -40,7 +70,8 @@ class mdTokenizer:
             self.currIndex += 1
 
     def skipWhiteSpaceNewLine(self):
-        """Resets the current index and consumes whitespace until an any character which is not space is reached"""
+        """Resets the current index and consumes whitespace until an any
+        character which is not space is reached"""
         # Reset current index
         self.currIndex = 0
         self.skipWhiteSpace()
@@ -73,8 +104,8 @@ class mdTokenizer:
 
     def eatCharsPlain(self):
         """Consumes characters and returns them to the calling function in the form of
-        a string. This function assumes that what is to be consumed is only plain
-        characters without any markup. Used for headings"""
+        a string. This function assumes that what is to be consumed is only
+        plain characters without any markup. Used for headings"""
         itemText = ""
         while(self.currChar != '\n'):
             itemText += self.currChar
@@ -205,7 +236,7 @@ class mdTokenizer:
         self.tokenizeLink()
 
     def tokenizeCheckItem(self):
-        """ Tokenize a checklist item of the form:\n
+        """ Tokenize a checklist item of the form:
             - [ ] ITEM """
         status = None
         checkItemContent = ""
@@ -246,7 +277,7 @@ class mdTokenizer:
         self.getNextChar()
         self.currIndex += 1
         self.skipWhiteSpace()
-        text = self.eatChars()
+        text = self.eatCharsMarkup()
         self.tokens.append(
             {"type": "Bullet", "content": text}
         )
@@ -261,7 +292,7 @@ class mdTokenizer:
             tickCount += 1
             self.getNextChar()
         if(tickCount == 3):
-            # Consume language
+            # Consume characters
             lang = self.eatCharsPlain()
             # get next line
             self.getNewLine()
@@ -337,11 +368,11 @@ class mdTokenizer:
             elif(self.text[self.currIndex] == '['):
                 print("Tripped test 5")
                 self.tokenizeLink()
-            # Bullet
+            # Bullet starting with a +
             elif(self.text[self.currIndex] == '+'):
                 print("Tripped test 6")
                 self.tokenizeBullet()
-            # Bullet
+            # Bullet starting with a *
             elif(self.text[self.currIndex] == '*' and self.peekNextChar() == " "):
                 print("Tripped test 7")
                 self.tokenizeBullet()
