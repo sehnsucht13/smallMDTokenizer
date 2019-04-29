@@ -13,3 +13,4 @@
 - [ ] Fix bug with heading content not being saved properly
 - [x] Add more comments
 - [ ] Clean up functions
+- [ ] Check if the blocks are properly formatted
