@@ -19,14 +19,14 @@ import re
 
 
 class streamSource:
-    """ Class responsible for opening a file handle to the markdown file to be
+    """ Class responsible for controlling the file handle for the markdown file to be
         parsed and providing access to its components"""
 
-    def __init__(self, streamPath):
+    def __init__(self, fileHandle):
         # hold the current line number in case of any errors
         self.lineNum = 0
         try:
-            self.fHandle = open(streamPath, 'r')
+            self.fHandle = fileHandle
             # find end of file
             self.fHandle.seek(0, 2)
             # save end of file location
@@ -53,7 +53,8 @@ class streamSource:
         return self.lineNum
 
     def lookAheadLineTest(self, regExp):
-        """Checks if the beginning of the next line matches a regular expression"""
+        """Checks if the beginning of the next line matches a regular expression
+            Used to checkfor any underlined headings """
         pos = self.fHandle.tell()
         currLine = self.fHandle.readline()
         status = re.search(regExp, currLine)
