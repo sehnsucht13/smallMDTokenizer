@@ -26,6 +26,7 @@ class mdTokenizer:
 
     def __init__(self, source):
         # Holds a handle to the source class which restricts access to the
+
         # source file
         self.src = source
         # The current line of text
@@ -49,14 +50,14 @@ class mdTokenizer:
         self.currIndex = 0
         self.skipWhiteSpace()
 
-    def getNextChar(self):
+    def getNext(self):
         """ Return the next character in the current line"""
         self.currIndex += 1
         self.currChar = self.text[self.currIndex]
         return self.currChar
 
-    def peekNextChar(self):
-        """ Return the next character """
+    def peekNext(self):
+        """ Return the next character without incrementing the position"""
         return self.text[self.currIndex + 1]
 
     def checkEmptyLine(self):
@@ -80,9 +81,11 @@ class mdTokenizer:
         a string. This function assumes that what is to be consumed is only
         plain characters without any markup. Used for headings"""
         itemText = ""
+        print("Here is the start: " + self.currChar)
         while(self.currChar != '\n'):
+            print(self.currChar)
             itemText += self.currChar
-            self.getNextChar()
+            self.getNext()
         return itemText
 
     def eatCharsMarkup(self):
@@ -90,20 +93,20 @@ class mdTokenizer:
         textArr = []
         while(self.currChar != '\n'):
             # Case of bold text like **WORD**
-            if(self.currChar == "*" and self.peekNextChar() == "*"):
+            if(self.currChar == "*" and self.peekNext() == "*"):
                 boldText = ""
                 # Skip over the following *
-                self.getNextChar()
-                self.getNextChar()
+                self.getNext()
+                self.getNext()
                 while(self.currChar != "*"):
                     boldText += self.currChar
-                    self.getNextChar()
+                    self.getNext()
 
                 # at this point, currChar is on the first closing *
                 # Move to second *
-                self.getNextChar()
+                self.getNext()
                 # Now skipped over ** completely
-                self.getNextChar()
+                self.getNext()
 
                 # Add token for bolded text
                 textArr.append({
@@ -115,12 +118,12 @@ class mdTokenizer:
             elif(self.currChar == "*"):
                 italicText = ""
                 # Skip over to next character
-                self.getNextChar()
+                self.getNext()
                 while(self.currChar != "*"):
                     italicText += self.currChar
-                    self.getNextChar()
+                    self.getNext()
                 # At this point, currChar is on a * so we skip to the next char
-                self.getNextChar()
+                self.getNext()
 
                 # Add token for italic text
                 textArr.append({
@@ -133,7 +136,7 @@ class mdTokenizer:
                 plainText = ""
                 while self.currChar != '\n' and self.currChar != '*':
                     plainText += self.currChar
-                    self.getNextChar()
+                    self.getNext()
 
                 # Add token for plain text
                 textArr.append({
@@ -145,31 +148,28 @@ class mdTokenizer:
 
     def tokenizeMarkedHeading(self):
         """Tokenizes a standard markdown heading"""
-        # Check if the first char in stream is #
-        headingSize = 0
+        headingSize = 1
         headingText = ""
-        while(self.getNextChar() == '#'):
-            headingSize += 1
+
+        while(self.getNext() == '#'):
+            if headingSize != 6:
+                headingSize += 1
 
         # Skip over intial whitespace
         self.skipWhiteSpace()
+
         # Add contents of heading
         headingText = self.eatCharsPlain()
+
         # Append to token list
         self.tokens.append(
             {"type": tokType.MHEADING, "size": headingSize, "content": headingText})
         self.addEOL()
 
-    def tokenizeText(self):
-        """Tokenizes a line of (for now) plain text"""
-        textContent = self.eatCharsMarkup()
-        self.tokens.append({"type": "Text", "content": textContent})
-        self.addEOL()
-
     def tokenizeUnmarkedHeading(self):
         """ Tokenize headings which are underlined """
         textContent = ""
-        while(self.getNextChar() != '\n'):
+        while(self.getNext() != '\n'):
             textContent += self.currChar
         # skip over the next line since it is useless to parse
         src.returnLine()
@@ -179,23 +179,30 @@ class mdTokenizer:
         })
         self.addEOL()
 
+    def tokenizeText(self):
+        """Tokenizes a standard line of text"""
+        textContent = self.eatCharsMarkup()
+        self.tokens.append({"type": "Text", "content": textContent})
+        self.addEOL()
+
+
     def tokenizeLink(self):
         """Tokenizes a standard markdown link"""
         linkTitle = ""
         linkPath = ""
         self.skipWhiteSpace()
-        self.getNextChar()
+        self.getNext()
         self.skipWhiteSpace()
-        while(self.getNextChar() != ']'):
+        while(self.getNext() != ']'):
             linkTitle += self.currChar
 
         # Skip over the ] character
-        self.getNextChar()
+        self.getNext()
         self.skipWhiteSpace()
         # Skip over (
-        self.getNextChar()
+        self.getNext()
         self.skipWhiteSpace()
-        while(self.getNextChar() != ')'):
+        while(self.getNext() != ')'):
             linkPath += self.currChar
 
         self.tokens.append(
@@ -204,7 +211,7 @@ class mdTokenizer:
     def tokenizeImage(self):
         """ Tokenizes an image link """
         # skip over the ! char which indicates that it is an image
-        self.getNextChar()
+        self.getNext()
         # The image link in standard markdown is just like the standard link
         self.tokenizeLink()
 
@@ -215,21 +222,21 @@ class mdTokenizer:
         checkItemContent = ""
         self.skipWhiteSpace()
         # Skip over the -
-        self.getNextChar()
+        self.getNext()
         self.skipWhiteSpace()
         # Skip over [
-        self.getNextChar()
+        self.getNext()
 
-        if(self.text[self.currIndex] == 'x'):
+        if(self.currChar == 'x'):
             status = True
 
         # Skip over ]
-        self.getNextChar()
-        self.getNextChar()
+        self.getNext()
+        self.getNext()
         self.skipWhiteSpace()
         while(self.currChar != '\n'):
             checkItemContent += self.currChar
-            self.getNextChar()
+            self.getNext()
 
         self.tokens.append(
             {"type": tokType.CHECKMARK, "status": status, "content": checkItemContent})
@@ -247,7 +254,7 @@ class mdTokenizer:
     def tokenizeBullet(self):
         """ Tokenize a markdown bullet """
         # skip over + or - or *
-        self.getNextChar()
+        self.getNext()
         self.currIndex += 1
         self.skipWhiteSpace()
         text = self.eatCharsMarkup()
@@ -263,7 +270,7 @@ class mdTokenizer:
         codeBlockContent = []
         while(self.currChar == '`'):
             tickCount += 1
-            self.getNextChar()
+            self.getNext()
         if(tickCount == 3):
             # Consume characters
             lang = self.eatCharsPlain()
@@ -289,7 +296,7 @@ class mdTokenizer:
             tickCount = 0
             while self.currChar == '`':
                 tickCount += 1
-                self.getNextChar()
+                self.getNext()
 
             # Case of malformed block
             if tickCount != 3:
@@ -314,12 +321,14 @@ class mdTokenizer:
         return self.tokens
 
     def tokenize(self):
-        """ General function which applies the tokenizing rules based on the context"""
+        """ General driver of the entire tokenizer. 
+            It applies the tokenizing rules based on the context detected
+            by the first character of the stream which has not yet been consumed """
         while(src.checkEOF()):
             self.getNewLine()
             self.skipWhiteSpaceNewLine()
             # Standard heading starting with #
-            if(self.text[self.currIndex] == '#'):
+            if self.currChar == '#':
                 print("Tripped test 1")
                 self.tokenizeMarkedHeading()
             # Underlined heading
@@ -327,26 +336,26 @@ class mdTokenizer:
                 print("Tripped test 2")
                 self.tokenizeUnmarkedHeading()
             # Either a bullet or checklist item
-            elif(self.text[self.currIndex] == '-'):
+            elif(self.currChar == '-'):
                 print("Tripped test 3")
                 if(self.isCheckItemOrBullet() == 1):
                     self.tokenizeCheckItem()
                 else:
                     self.tokenizeBullet()
             # Image link
-            elif(self.text[self.currIndex] == '!'):
+            elif(self.currChar == '!'):
                 print("Tripped test 4")
                 self.tokenizeImage()
             # Normal link
-            elif(self.text[self.currIndex] == '['):
+            elif(self.currChar == '['):
                 print("Tripped test 5")
                 self.tokenizeLink()
             # Bullet starting with a +
-            elif(self.text[self.currIndex] == '+'):
+            elif(self.currChar == '+'):
                 print("Tripped test 6")
                 self.tokenizeBullet()
             # Bullet starting with a *
-            elif(self.text[self.currIndex] == '*' and self.peekNextChar() == " "):
+            elif(self.currChar == '*' and self.peekNext() == " "):
                 print("Tripped test 7")
                 self.tokenizeBullet()
             elif(self.currChar == '`'):
