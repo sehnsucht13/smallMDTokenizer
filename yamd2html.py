@@ -17,18 +17,27 @@
 
 from mdownParser import mdTokenizer
 from HtmlConverter import HTMLConverter
-import argparse
-import sys
+from sys import exit
 from os import path, makedirs
+import argparse
 
 def checkArgPath():
     """ Checks whether or not the provided file paths exists. If needed, 
         files and folders are created to accomodate the output path
         provided. Also opens file handles to the respective files and returns them"""
-    # Check if the provided path for the input file is valid
+    # Check if the provided path for the input and output files is valid
     if os.path.isfile(args.path) is True:
-        if args.output is not None and os.path.isfile(args.output) is True:
-            outputFileHandle = open(args.output, "w+")
+        if args.output is not None:
+            # Case of providing a valid output file
+            if os.path.isfile(args.output) is True:
+                outputFileHandle = open(args.output, "w")
+            # Case of outptut file not existing. Create any new directories 
+            # along the way
+            else:
+                outputPath, outputFile = os.path.split(args.output)
+                os.makedirs(outputPath)
+                outputFileHandle = open(args.output, "w")
+
         # If the output file is not provided, one is created in the same folder
         # with the same name
         else:
@@ -62,9 +71,11 @@ def main():
 
    tokenizer = mdTokenizer(inputFile)
    tokenizer.tokenize()
-   tokens = parser.returnTokenList()
+   # List of tokens extracted from the markdown input file provided
+   tokens = tokenizer.returnTokenList()
 
    converter = HTMLConverter(tokens, outputFile)
+   # Convert the tokens and output to an HTML file
    converter.convertTokens()
 
 if __name__ == '__main__':
