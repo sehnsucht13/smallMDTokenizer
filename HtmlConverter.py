@@ -14,17 +14,22 @@
 #
 #     Copyright (C) 2019 Yavor Konstantinov
 #
-import tokenType
+
+from tokenType import tokType
 
 class HTMLConverter():
+    """ Convert a stream of tokens passed by \"tokenStream\" into a 
+        valid HTML file which is saved in the file represented by 
+        \"outputFileHandle\" """
     def __init__(self, tokenStream, outputFileHandle):
+        # File handle to the output file
         self.fileHandle = outputFileHandle
         # Holds the stream of tokens
         self.tokens = tokenStream
-        # Holds the current token
-        self.currTok = None
         # The index along the stream
         self.currIndex = 0
+        # Holds the current token
+        self.currTok = self.tokens[self.currIndex]
 
     def nextTok(self):
         """ Increments the position, sets the next token and returns it"""
@@ -57,9 +62,32 @@ class HTMLConverter():
         self.write(outputString)
 
     def convertImage(self):
+        """ Converts an image link to HTML and adds it to the output file """
         imgAltText = self.currtok['title']
         imgPath = self.currTok['path']
         outputString = "<img src=\"{0}\" alt=\"{1}\" width=\"200\" height=\"200\">"
 
     def convertTokens():
+        while True:
+            # Marked Heading
+            if self.currTok['type'] == tokType.MHEADING:
+                self.convertHeading()
+                self.nextTok()
+            # Regular link
+            elif self.currTok['type'] == tokType.LINK:
+                self.convertLink()
+                self.nextTok()
+            # Image link
+            elif self.currTok['type'] == tokType.IMAGE:
+                self.convertImage()
+                self.nextTok()
+            # Blank line
+            elif self.currTok['type'] == tokType.Blank:
+                self.write("")
+                self.nextTok()
+            # Exit the loop
+            elif self.currTok['type'] == tokType.EOF:
+                break
+
+
 
