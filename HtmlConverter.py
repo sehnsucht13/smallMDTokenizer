@@ -14,7 +14,7 @@
 #
 #     Copyright (C) 2019 Yavor Konstantinov
 #
-
+import tokenType
 
 class HTMLConverter():
     def __init__(self, tokenStream, outputFileHandle):
@@ -60,3 +60,6 @@ class HTMLConverter():
         imgAltText = self.currtok['title']
         imgPath = self.currTok['path']
         outputString = "<img src=\"{0}\" alt=\"{1}\" width=\"200\" height=\"200\">"
+
+    def convertTokens():
+

@@ -15,12 +15,38 @@
 #     Copyright (C) 2019 Yavor Konstantinov
 #
 
-import mdownParser
-import HtmlConverter
+from mdownParser import mdTokenizer
+from HtmlConverter import HTMLConverter
 import argparse
 import sys
-import os.path
+from os import path, makedirs
 
+def checkArgPath():
+    """ Checks whether or not the provided file paths exists. If needed, 
+        files and folders are created to accomodate the output path
+        provided. Also opens file handles to the respective files and returns them"""
+    # Check if the provided path for the input file is valid
+    if os.path.isfile(args.path) is True:
+        if args.output is not None and os.path.isfile(args.output) is True:
+            outputFileHandle = open(args.output, "w+")
+        # If the output file is not provided, one is created in the same folder
+        # with the same name
+        else:
+            # Retrieve the path for the new file to be created
+            inputHead, inputTail = os.path.split(args.path)
+            inputTail = inputTail.split('.')[0]
+            inputTail += ".html"
+            print(inputTail)
+            outputFileHandle = open(os.path.join(inputHead, inputTail), "w+")
+        
+        # Open the input file
+        inputFileHandle = open(args.path)
+
+        return (inputFileHandle, outputFileHandle)
+    else:
+        print("The provided path to the input file does not exist. Please
+                double check that you provided it correctly!")
+        sys.exit(1)
 
 def main():
     parser = argparse.ArgumentParser(
@@ -31,29 +57,15 @@ def main():
         '-o', '--output', help="The path for the output file. If it is not provided, an HTML file will be created in the same folder with the same file name but ending with a .html file extension.")
     args = parser.parse_args()
    
-   # Contains the file handle for the output file
-    outputFile = None
-    inputFile = None
+   # File handles for input and output file 
+   inputFile, outputFile = checkArgPath()
 
-    # Check if the provided path for the input file is valid
-    if os.path.isfile(args.path) is True:
-        if args.output is not None and os.path.isfile(args.output) is True:
-            outputFile = open(args.output, "w+")
-        # If the output file is not provided, one is created in the same folder
-        # with the same name
-        else:
-            # Retrieve the path for the new file to be created
-            inputHead, inputTail = os.path.split(args.path)
-            inputTail = inputTail.split('.')[0]
-            inputTail += ".html"
-            print(inputTail)
-            outputFile = open(os.path.join(inputHead, inputTail), "w+")
-        
-        # Open the input file
-        inputFile = open(args.path)
-    else:
-        print("The provided path to the input file does not exist.")
-        sys.exit(1)
+   tokenizer = mdTokenizer(inputFile)
+   tokenizer.tokenize()
+   tokens = parser.returnTokenList()
+
+   converter = HTMLConverter(tokens, outputFile)
+   converter.convertTokens()
 
 if __name__ == '__main__':
     main()

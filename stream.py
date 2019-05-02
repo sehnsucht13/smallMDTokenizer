@@ -26,8 +26,8 @@ class streamSource:
         # hold the current line number in case of any errors
         self.lineNum = 0
         try:
-            #self.fHandle = fileHandle
-            self.fHandle = open(fileHandle, "r")
+            self.fHandle = fileHandle
+            #self.fHandle = open(fileHandle, "r")
             # find end of file
             self.fHandle.seek(0, 2)
             # save end of file location

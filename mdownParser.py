@@ -380,8 +380,8 @@ class mdTokenizer:
 
 
 # temp test
-if __name__ == "__main__":
-    src = streamSource("test.md")
-    tok = mdTokenizer(src)
-    tok.tokenize()
-    print(tok.returnTokenList())
+#if __name__ == "__main__":
+ #   src = streamSource("test.md")
+  #  tok = mdTokenizer(src)
+   # tok.tokenize()
+    #print(tok.returnTokenList())
