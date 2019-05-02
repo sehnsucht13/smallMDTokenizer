@@ -38,18 +38,6 @@ class mdTokenizer:
         # The list of tokens
         self.tokens = []
 
-    def skipWhiteSpace(self):
-        """Skips all whitespace until the next character is encountered"""
-        while(self.text[self.currIndex] == ' '):
-            self.currIndex += 1
-
-    def skipWhiteSpaceNewLine(self):
-        """Resets the current index and consumes whitespace until an any
-        character which is not space is reached"""
-        # Reset current index
-        self.currIndex = 0
-        self.skipWhiteSpace()
-
     def getNext(self):
         """ Return the next character in the current line"""
         self.currIndex += 1
@@ -59,6 +47,18 @@ class mdTokenizer:
     def peekNext(self):
         """ Return the next character without incrementing the position"""
         return self.text[self.currIndex + 1]
+
+    def skipWhiteSpace(self):
+        """Skips all whitespace until the next character is encountered"""
+        while(self.currChar == ' '):
+            self.getNext()
+
+    def skipWhiteSpaceNewLine(self):
+        """Resets the current index and consumes whitespace until an any
+        character which is not space is reached"""
+        # Reset current index
+        self.currIndex = 0
+        self.skipWhiteSpace()
 
     def checkEmptyLine(self):
         """Check if the current line is an empty line"""
@@ -155,9 +155,11 @@ class mdTokenizer:
             if headingSize != 6:
                 headingSize += 1
 
+        print("Here is the char:" + self.currChar)
         # Skip over intial whitespace
         self.skipWhiteSpace()
-
+        
+        print("Here is the char:" + self.currChar)
         # Add contents of heading
         headingText = self.eatCharsPlain()
 
