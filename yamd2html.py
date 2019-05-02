@@ -49,6 +49,7 @@ def main():
             print(inputTail)
             outputFile = open(os.path.join(inputHead, inputTail), "w+")
         
+        # Open the input file
         inputFile = open(args.path)
     else:
         print("The provided path to the input file does not exist.")

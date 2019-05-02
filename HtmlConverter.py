@@ -17,21 +17,46 @@
 
 
 class HTMLConverter():
-    def __init__(self, tokenStream):
+    def __init__(self, tokenStream, outputFileHandle):
+        self.fileHandle = outputFileHandle
+        # Holds the stream of tokens
         self.tokens = tokenStream
+        # Holds the current token
+        self.currTok = None
+        # The index along the stream
         self.currIndex = 0
 
-    def peek(self):
-        return self.tokens.pop(self.currIndex)
+    def nextTok(self):
+        """ Increments the position, sets the next token and returns it"""
+        self.currTok = self.tokens[self.currIndex]
+        self.currIndex += 1
+        return self.currTok
 
-    def next(self):
+    def peekTok(self):
+        """ Returns the next token in stream without incrementing the
+            position """
         return self.tokens[self.currIndex + 1]
 
-    def convertText(self):
-        pass
+    def write(self, htmlString):
+        """ Writes the provided HTML string to the output file 
+            which is represented by the var called fileHandle """
+            self.fileHandle.write(htmlString + "\n")
 
     def convertHeading(self):
-        """ Convert a heading to html"""
-        tok = self.peek()
-        size = tok['size']
-        content = tok['content']
+        """ Convert a heading to html and add it to output file """
+        size = self.currTok['size']
+        content = self.currTok['content']
+        outputString = "<h{0}>{1}</h{0}>".format(size, content)
+        self.write(outputString)
+
+    def convertLink(self):
+        """ Converts a link to HTML and adds it to the output file """
+        linkTitle = self.currTok['title']
+        linkPath = self.currTok['path']
+        outputString = "<a href=\"{0}\">{1}</a>"
+        self.write(outputString)
+
+    def convertImage(self):
+        imgAltText = self.currtok['title']
+        imgPath = self.currTok['path']
+        outputString = "<img src=\"{0}\" alt=\"{1}\" width=\"200\" height=\"200\">"
