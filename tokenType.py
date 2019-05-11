@@ -28,3 +28,7 @@ class tokType(Enum):
     ITALIC = 13
     # Bold
     BOLD = 14
+    # Indent
+    INDENT = 15
+    # Block Quotes
+    BLOCKQUOTE = 16

@@ -44,9 +44,9 @@ class mdTokenizer:
         self.currChar = self.text[self.currIndex]
         return self.currChar
 
-    def peekNext(self):
+    def peekNext(self, n=1):
         """ Return the next character without incrementing the position"""
-        return self.text[self.currIndex + 1]
+        return self.text[self.currIndex + n]
 
     def skipWhiteSpace(self):
         """Skips all whitespace until the next character is encountered"""
@@ -58,7 +58,20 @@ class mdTokenizer:
         character which is not space is reached"""
         # Reset current index
         self.currIndex = 0
-        self.skipWhiteSpace()
+        # Used to measure indentation levels for lists within lists
+        spaceNumberCount = 0
+        # Iterate and count until we reach anything which is not a space
+        while(self.currChar == ' '):
+            spaceNumberCount += 1
+            self.getNext()
+
+        # If the number of spaces is more than 0 then we have indented text
+        if spaceNumberCount != 0:
+            self.tokens.append({
+                    "type": tokType.INDENT,
+                    "count": spaceNumberCount
+                })
+
 
     def checkEmptyLine(self):
         """Check if the current line is an empty line"""
@@ -310,49 +323,41 @@ class mdTokenizer:
             self.skipWhiteSpaceNewLine()
             # Standard heading starting with #
             if self.currChar == '#':
-                print("Tripped test 1")
                 self.tokenizeMarkedHeading()
             # Underlined heading
-            elif(src.lookAheadLineTest("^(-{2,}|={2,})")):
-                print("Tripped test 2")
+            elif(src.lookAheadLineTest("^(-{3,}|={3,})")):
                 self.tokenizeUnmarkedHeading()
             # Either a bullet or checklist item
             elif(self.currChar == '-'):
-                print("Tripped test 3")
                 if(self.isCheckItemOrBullet() == 1):
                     self.tokenizeCheckItem()
                 else:
                     self.tokenizeBullet()
             # Image link
             elif(self.currChar == '!'):
-                print("Tripped test 4")
                 self.tokenizeImage()
             # Normal link
             elif(self.currChar == '['):
-                print("Tripped test 5")
                 self.tokenizeLink()
             # Bullet starting with a +
             elif(self.currChar == '+'):
-                print("Tripped test 6")
                 self.tokenizeBullet()
             # Bullet starting with a *
             elif(self.currChar == '*' and self.peekNext() == " "):
-                print("Tripped test 7")
                 self.tokenizeBullet()
-            elif(self.currChar == '`'):
-                print("Tripped test for code block")
+            elif(self.currChar == '`' and self.peekNext() == '`' and self.peekNext(2) == '`'):
                 self.tokenizeCodeBlock()
+            elif(str.isdigit(self.currChar) and self.peekNext(1) == '.' and self.peekNext(2) == ' '):
+                self.tokenizeBullet()
             # Plain sentence
             elif(str.isalnum(self.currChar)):
-                print("Tripped test 8")
                 self.tokenizeText()
             # Blank line
             elif(self.checkEmptyLine()):
-                print("Tripped test BLANK")
                 self.tokens.append({"type": tokType.BLANK})
             # Unhandled case
             else:
-                pass
+                print("Unknown parsing error!")
 
         # Add an EOF token
         self.tokens.append({"type": "EOF"})
