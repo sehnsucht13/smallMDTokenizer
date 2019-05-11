@@ -81,7 +81,6 @@ class mdTokenizer:
         a string. This function assumes that what is to be consumed is only
         plain characters without any markup. Used for headings"""
         itemText = ""
-        print("Here is the start: " + self.currChar)
         while(self.currChar != '\n'):
             print(self.currChar)
             itemText += self.currChar
@@ -93,55 +92,36 @@ class mdTokenizer:
         textArr = []
         while(self.currChar != '\n'):
             # Case of bold text like **WORD**
-            if(self.currChar == "*" and self.peekNext() == "*"):
-                boldText = ""
+            if((self.currChar == '*' and self.peekNext() == '*') or (self.currChar == '_' and self.peekNext() == '_')):
                 # Skip over the following *
                 self.getNext()
                 self.getNext()
-                while(self.currChar != "*"):
-                    boldText += self.currChar
-                    self.getNext()
-
-                # at this point, currChar is on the first closing *
-                # Move to second *
-                self.getNext()
-                # Now skipped over ** completely
-                self.getNext()
-
                 # Add token for bolded text
                 textArr.append({
-                    "markup": "B",
-                    "content": tokType.BOLD
+                    "type": tokType.BOLD,
                 })
 
             # Case of italic text like *WORD*
-            elif(self.currChar == "*"):
-                italicText = ""
-                # Skip over to next character
-                self.getNext()
-                while(self.currChar != "*"):
-                    italicText += self.currChar
-                    self.getNext()
-                # At this point, currChar is on a * so we skip to the next char
+            elif(self.currChar == "*" or self.currChar == '_'):
+                # Skip over * to next character
                 self.getNext()
 
                 # Add token for italic text
                 textArr.append({
-                    "markup": "I",
-                    "content": tokType.ITALIC
+                    "type" : tokType.ITALIC
                 })
 
             # Default case for plain text
             else:
-                plainText = ""
+                textContent = ""
                 while self.currChar != '\n' and self.currChar != '*':
-                    plainText += self.currChar
+                    textContent += self.currChar
                     self.getNext()
 
-                # Add token for plain text
+                # Add token for plain text with its content
                 textArr.append({
-                    "markup": "P",
-                    "content": tokType.PLAINTEXT
+                    "type": tokType.PLAIN,
+                    "content": textContent
                 })
 
         return textArr
@@ -184,8 +164,7 @@ class mdTokenizer:
     def tokenizeText(self):
         """Tokenizes a standard line of text"""
         textContent = self.eatCharsMarkup()
-        self.tokens.append({"type": "Text", "content": textContent})
-        self.addEOL()
+        self.tokens.append({"type": tokType.MARKUPTEXT, "content": textContent})
 
 
     def tokenizeLink(self):
@@ -326,7 +305,7 @@ class mdTokenizer:
         """ General driver of the entire tokenizer. 
             It applies the tokenizing rules based on the context detected
             by the first character of the stream which has not yet been consumed """
-        while(src.checkEOF()):
+        while(self.src.checkEOF()):
             self.getNewLine()
             self.skipWhiteSpaceNewLine()
             # Standard heading starting with #
@@ -380,8 +359,8 @@ class mdTokenizer:
 
 
 # temp test
-#if __name__ == "__main__":
- #   src = streamSource("test.md")
-  #  tok = mdTokenizer(src)
-   # tok.tokenize()
-    #print(tok.returnTokenList())
+if __name__ == "__main__":
+   src = streamSource("test.md")
+   tok = mdTokenizer(src)
+   tok.tokenize()
+   print(tok.returnTokenList())

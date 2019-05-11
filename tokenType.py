@@ -11,7 +11,7 @@ class tokType(Enum):
     # Regular link(anything but an image link)
     LINK = 5
     # Plain text in a heading. No markup is recognized
-    PLAINTEXT = 6
+    PLAIN = 6
     # Marked up text
     MARKUPTEXT = 7
     # Bullet mark
