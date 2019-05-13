@@ -124,6 +124,16 @@ class mdTokenizer:
                     "type" : tokType.ITALIC
                 })
 
+            # Inline code
+            elif self.currChar == '`':
+                # skip over the `
+                self.getNext()
+                # Add token
+                textArr.append({
+                    "type": tokType.ICODE     
+                })
+
+
             # Default case for plain text
             else:
                 textContent = ""
@@ -393,7 +403,7 @@ class mdTokenizer:
             elif(str.isdigit(self.currChar) and self.peekNext(1) == '.' and self.peekNext(2) == ' '):
                 self.tokenizeBullet()
             # Plain sentence
-            elif(str.isalnum(self.currChar)):
+            elif str.isalnum(self.currChar) or self.currChar == '`':
                 self.tokenizeText()
             # Blank line
             elif(self.checkEmptyLine()):

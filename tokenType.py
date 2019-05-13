@@ -34,3 +34,5 @@ class tokType(Enum):
     BLOCKQUOTE = 16
     # Image
     IMAGE = 17
+    # Inline Code
+    ICODE = 18
