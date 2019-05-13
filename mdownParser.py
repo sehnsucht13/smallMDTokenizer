@@ -17,6 +17,7 @@
 
 import sys   # used to exit program when an undesirable state occurs
 from tokenType import tokType
+import re
 
 
 class mdTokenizer:
@@ -410,9 +411,6 @@ class mdTokenizer:
                 src.getLineNum)
             sys.exit(errString)
 
-    def returnTokenList(self):
-        """ Return the list of tokens """
-        return self.tokens
 
     def isHR(self, char):
         """ Count the occurence of a certain type of character on a line of 
@@ -435,6 +433,32 @@ class mdTokenizer:
             "type": tokType.HR
             })
 
+    def isUnderlinedHeading(self):
+        # starting position of next line
+        startPos = 0
+        # End position of next line. Represents \n
+        endPos = 0
+        # Find the beginning of next string
+        while self.peekNext(startPos) != '\n':
+            startPos += 1
+
+        # At this point, startPos points to the index of \n
+        startPos += 1
+
+        endPos = startPos
+        startPos += self.currIndex
+
+        # Find the end of next string
+        while self.peekNext(endPos) != '\n':
+            endPos += 1
+
+        endPos += self.currIndex
+        endPos += 1
+
+        searchExp = re.compile("^(-{3,}|={3,})\n")
+        print("Did the test")
+        output =searchExp.fullmatch(self.text, startPos, endPos)
+        print("Output" + output)
 
     def tokenize(self):
         """ General driver of the entire tokenizer. 
@@ -445,11 +469,12 @@ class mdTokenizer:
                 self.getNext()
             self.skipWhiteSpaceNewLine()
             # Standard heading starting with #
-            if self.currChar == '#' and self.peekNext() == ' ':
+            if self.currChar == '#': 
                 self.tokenizeMarkedHeading()
             # Underlined heading
-            #elif src.lookAheadLineTest("^(-{3,}|={3,})"):
-             #   self.tokenizeUnmarkedHeading()
+            elif self.isUnderlinedHeading():
+                print("Got a match")
+                self.tokenizeUnmarkedHeading()
             elif self.currChar == '_':
                 if self.isHR('_') == True:
                     self.insertHR()
@@ -488,6 +513,9 @@ class mdTokenizer:
         # Add an EOF token
         self.tokens.append({"type": "EOF"})
 
+    def returnTokenList(self):
+        """ Return the list of tokens """
+        return self.tokens
 
 # temp test
 if __name__ == "__main__":
