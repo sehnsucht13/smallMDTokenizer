@@ -40,3 +40,5 @@ class tokType(Enum):
     HR = 19
     # Numbered bullet
     NUMBULLET = 20
+    # Crossed out text
+    CROSS = 21

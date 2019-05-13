@@ -133,6 +133,13 @@ class mdTokenizer:
                     "type": tokType.ICODE     
                 })
 
+            # Small addition to regular grammar which supports crossed out text
+            elif self.currChar == '~' and self.peekNext() == '~':
+                self.getNext()
+                self.getNext()
+                textArr.append({
+                    "type": tokType.CROSS
+                })
 
             # Default case for plain text
             else:
@@ -310,6 +317,19 @@ class mdTokenizer:
                 return 1
             lookAheadIndex += 1
 
+    def isNumBullet(self):
+        """ Check if the current line starting with a number is a 
+            numbered bullet or a regular line of markdown text"""
+        pos = 0
+        # Skip numbers on the line
+        while str.isdigit(self.peekNext(pos)):
+            pos += 1
+        # Check if the bullet is the required format
+        if self.peekNext(pos) == '.' and self.peekNext(pos + 1) == ' ':
+            return True
+        else:
+            return False
+
     def tokenizeBullet(self):
         """ Tokenize a markdown bullet """
         # Case of a numbered list item
@@ -423,18 +443,6 @@ class mdTokenizer:
             "type": tokType.HR
             })
 
-    def isNumBullet(self):
-        """ Check if the current line starting with a number is a 
-            numbered bullet or a regular line of markdown text"""
-        pos = 0
-        # Skip numbers on the line
-        while str.isdigit(self.peekNext(pos)):
-            pos += 1
-        # Check if the bullet is the required format
-        if self.peekNext(pos) == '.' and self.peekNext(pos + 1) == ' ':
-            return True
-        else:
-            return False
 
     def tokenize(self):
         """ General driver of the entire tokenizer. 
