@@ -185,11 +185,18 @@ class mdTokenizer:
 
     def tokenizeText(self):
         """Tokenizes a line of marked up text"""
-        textContent = self.eatCharsMarkup()
-        self.tokens.append({
-            "type": tokType.MARKUPTEXT,
-            "content": textContent
+        # Case of an empty line
+        if self.currChar == '\n':
+            self.tokens.append({
+                "type": tokType.BLANK
             })
+        # Case of any other text
+        else:
+            textContent = self.eatCharsMarkup()
+            self.tokens.append({
+                "type": tokType.MARKUPTEXT,
+                "content": textContent
+                })
 
 
     def tokenizeLink(self):
@@ -315,7 +322,6 @@ class mdTokenizer:
             "content": text
         })
 
-    # TODO Check if block is properly formatted
     def tokenizeCodeBlock(self):
         """ Tokenize a code block. """
         tickCount = 0
@@ -373,6 +379,27 @@ class mdTokenizer:
         """ Return the list of tokens """
         return self.tokens
 
+    def isHR(self, char):
+        """ Count the occurence of a certain type of character on a line of 
+            text. Used to detect line rules."""
+        count = 1
+        pos = 1
+        while self.peekNext(pos) == char:
+            count += 1
+            pos += 1
+            print("Yea")
+        print(count)
+        if self.peekNext(pos) == '\n' and count >= 3:
+            return True
+        else:
+            return False
+
+    def insertHR(self):
+        """ Insert a horizontal rule token into the token stream """
+        self.tokens.append({
+            "type": tokType.HR
+            })
+
     def tokenize(self):
         """ General driver of the entire tokenizer. 
             It applies the tokenizing rules based on the context detected
@@ -386,40 +413,42 @@ class mdTokenizer:
             # Underlined heading
             elif src.lookAheadLineTest("^(-{3,}|={3,})"):
                 self.tokenizeUnmarkedHeading()
+            elif self.currChar == '_':
+                if self.isHR('_') == True:
+                    self.insertHR()
             # Either a bullet or checklist item
-            elif self.currChar == '-' and self.peekNext() == ' ':
-                if self.isCheckItemOrBullet() == 1:
+            elif self.currChar == '-': 
+                if self.isHR('-') == True:
+                    self.insertHR()
+                elif self.isCheckItemOrBullet() == 1:
+                    print("bullet")
                     self.tokenizeCheckItem()
                 else:
                     self.tokenizeBullet()
+            # Bullet starting with a +
+            elif self.currChar == '+' and self.peekNext() == ' ':
+                self.tokenizeBullet()
+            # Bullet starting with a *
+            elif self.currChar == '*':
+                if self.isHR('*') == True:
+                    self.insertHR()
+                elif self.peekNext() == ' ':
+                    self.tokenizeBullet()
+                print("Exit bullet case")
             # Image link
-            elif self.currChar == '!':
-                print("image")
+            elif self.currChar == '!' and self.peekNext() == '[':
                 self.tokenizeImage()
             # Normal link
             elif self.currChar == '[':
                 self.tokenizeLink()
-            # Bullet starting with a +
-            elif self.currChar == '+':
-                self.tokenizeBullet()
-            # Bullet starting with a *
-            elif self.currChar == '*' and self.peekNext() == " ":
-                self.tokenizeBullet()
+            # Code blocks
             elif self.currChar == '`' and self.peekNext() == '`' and self.peekNext(2) == '`':
                 self.tokenizeCodeBlock()
+            # Numbered Bullets
             elif str.isdigit(self.currChar) and self.peekNext(1) == '.' and self.peekNext(2) == ' ':
                 self.tokenizeBullet()
-            # Plain sentence
-            elif str.isalnum(self.currChar) or self.currChar == '`':
-                self.tokenizeText()
-            # Blank line
-            elif self.checkEmptyLine():
-                self.tokens.append({
-                    "type": tokType.BLANK
-                })
-            # Unhandled case
             else:
-                print("Unknown parsing error!")
+                self.tokenizeText()
 
         # Add an EOF token
         self.tokens.append({"type": "EOF"})
