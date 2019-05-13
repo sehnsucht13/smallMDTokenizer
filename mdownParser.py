@@ -312,15 +312,38 @@ class mdTokenizer:
 
     def tokenizeBullet(self):
         """ Tokenize a markdown bullet """
-        # skip over + or - or *
-        self.getNext()
-        self.currIndex += 1
-        self.skipWhiteSpace()
-        text = self.eatCharsMarkup()
-        self.tokens.append({
-            "type": tokType.BULLET,
-            "content": text
-        })
+        # Case of a numbered list item
+        if str.isdigit(self.currChar) == True:
+            # Iterate over all digits. This parses does not care about the
+            # number associate with the bullet. The numbers are assigned
+            # automatically when converting into an HTML numbered list
+            while str.isdigit(self.currChar):
+                self.getNext()
+            # At this point, we are the . character
+            self.getNext()
+            self.skipWhiteSpace()
+            # Consume the chars
+            text = self.eatCharsMarkup()
+            self.tokens.append({
+                "type": tokType.NUMBULLET,
+                "content": text
+            })
+
+        # Case of a regular bullet
+        else:
+            print("Here is the bullet")
+            print(self.currChar)
+            # Skip over the *, - or +
+            self.getNext()
+            # Skip over the whitespace
+            self.skipWhiteSpace()
+            
+            # Consume the characters
+            text = self.eatCharsMarkup()
+            self.tokens.append({
+                "type": tokType.BULLET,
+                "content": text
+            })
 
     def tokenizeCodeBlock(self):
         """ Tokenize a code block. """
@@ -400,6 +423,19 @@ class mdTokenizer:
             "type": tokType.HR
             })
 
+    def isNumBullet(self):
+        """ Check if the current line starting with a number is a 
+            numbered bullet or a regular line of markdown text"""
+        pos = 0
+        # Skip numbers on the line
+        while str.isdigit(self.peekNext(pos)):
+            pos += 1
+        # Check if the bullet is the required format
+        if self.peekNext(pos) == '.' and self.peekNext(pos + 1) == ' ':
+            return True
+        else:
+            return False
+
     def tokenize(self):
         """ General driver of the entire tokenizer. 
             It applies the tokenizing rules based on the context detected
@@ -445,7 +481,7 @@ class mdTokenizer:
             elif self.currChar == '`' and self.peekNext() == '`' and self.peekNext(2) == '`':
                 self.tokenizeCodeBlock()
             # Numbered Bullets
-            elif str.isdigit(self.currChar) and self.peekNext(1) == '.' and self.peekNext(2) == ' ':
+            elif str.isdigit(self.currChar) and self.isNumBullet() == True:
                 self.tokenizeBullet()
             else:
                 self.tokenizeText()

@@ -36,3 +36,7 @@ class tokType(Enum):
     IMAGE = 17
     # Inline Code
     ICODE = 18
+    # Horizontal Rule
+    HR = 19
+    # Numbered bullet
+    NUMBULLET = 20
