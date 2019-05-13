@@ -50,7 +50,7 @@ class mdTokenizer:
 
     def skipWhiteSpace(self):
         """Skips all whitespace until the next character is encountered"""
-        while(self.currChar == ' '):
+        while self.currChar == ' ':
             self.getNext()
 
     def skipWhiteSpaceNewLine(self):
@@ -61,7 +61,7 @@ class mdTokenizer:
         # Used to measure indentation levels for lists within lists
         spaceNumberCount = 0
         # Iterate and count until we reach anything which is not a space
-        while(self.currChar == ' '):
+        while self.currChar == ' ':
             spaceNumberCount += 1
             self.getNext()
 
@@ -75,7 +75,7 @@ class mdTokenizer:
 
     def checkEmptyLine(self):
         """Check if the current line is an empty line"""
-        if(self.currChar == '\n' or self.currChar == '\r'):
+        if self.currChar == '\n' or self.currChar == '\r':
             return True
         return False
 
@@ -94,7 +94,7 @@ class mdTokenizer:
         a string. This function assumes that what is to be consumed is only
         plain characters without any markup. Used for headings"""
         itemText = ""
-        while(self.currChar != '\n'):
+        while self.currChar != '\n':
             print(self.currChar)
             itemText += self.currChar
             self.getNext()
@@ -103,9 +103,9 @@ class mdTokenizer:
     def eatCharsMarkup(self):
         """Consume characters which are using some type of markup such as * or **"""
         textArr = []
-        while(self.currChar != '\n'):
+        while self.currChar != '\n':
             # Case of bold text like **WORD**
-            if((self.currChar == '*' and self.peekNext() == '*') or (self.currChar == '_' and self.peekNext() == '_')):
+            if (self.currChar == '*' and self.peekNext() == '*') or (self.currChar == '_' and self.peekNext() == '_'):
                 # Skip over the following *
                 self.getNext()
                 self.getNext()
@@ -115,7 +115,7 @@ class mdTokenizer:
                 })
 
             # Case of italic text like *WORD*
-            elif(self.currChar == "*" or self.currChar == '_'):
+            elif self.currChar == "*" or self.currChar == '_':
                 # Skip over * to next character
                 self.getNext()
 
@@ -137,7 +137,7 @@ class mdTokenizer:
             # Default case for plain text
             else:
                 textContent = ""
-                while self.currChar != '\n' and self.currChar != '*':
+                while self.currChar not in ['\n', '*', '_', '[', '`']:
                     textContent += self.currChar
                     self.getNext()
 
@@ -154,7 +154,7 @@ class mdTokenizer:
         headingSize = 1
         headingText = ""
 
-        while(self.getNext() == '#'):
+        while self.getNext() == '#':
             if headingSize != 6:
                 headingSize += 1
 
@@ -165,8 +165,11 @@ class mdTokenizer:
         headingText = self.eatCharsMarkup()
 
         # Append to token list
-        self.tokens.append(
-            {"type": tokType.MHEADING, "size": headingSize, "content": headingText})
+        self.tokens.append({
+            "type": tokType.MHEADING,
+            "size": headingSize,
+            "content": headingText
+        })
         self.addEOL()
 
     def tokenizeUnmarkedHeading(self):
@@ -196,7 +199,7 @@ class mdTokenizer:
         self.skipWhiteSpace()
         self.getNext()
         self.skipWhiteSpace()
-        while(self.getNext() != ']'):
+        while self.getNext() != ']':
             linkTitle += self.currChar
 
         # Skip over the ] character
@@ -205,7 +208,7 @@ class mdTokenizer:
         # Skip over (
         self.getNext()
         self.skipWhiteSpace()
-        while(self.getNext() != ')'):
+        while self.getNext() != ')':
             linkPath += self.currChar
 
         self.tokens.append({
@@ -238,7 +241,7 @@ class mdTokenizer:
         self.getNext()
 
         # Retrieve the url
-        while self.currChar != ')' and self.currChar != '"':
+        while self.currChar not in ['"', ')']:
             imgURL += self.currChar
             self.getNext()
 
@@ -275,7 +278,7 @@ class mdTokenizer:
         # Skip over the beginning [
         self.getNext()
 
-        if(self.currChar == 'x'):
+        if self.currChar == 'x':
             status = True
 
         # Skip over the closing ]
@@ -284,16 +287,19 @@ class mdTokenizer:
         self.skipWhiteSpace()
         
         checkItemContent = self.eatCharsMarkup()
-        self.tokens.append(
-            {"type": tokType.CHECKMARK, "status": status, "content": checkItemContent})
+        self.tokens.append({
+            "type": tokType.CHECKMARK,
+            "status": status,
+            "content": checkItemContent
+        })
         self.addEOL()
 
     def isCheckItemOrBullet(self):
         """Check if the current line is a simple list bullet or is a checkmark"""
         # Used to look ahead in the string
         lookAheadIndex = self.currIndex + 1
-        while(lookAheadIndex != len(self.text)):
-            if(self.text[lookAheadIndex] == '['):
+        while lookAheadIndex != len(self.text):
+            if self.text[lookAheadIndex] == '[':
                 return 1
             lookAheadIndex += 1
 
@@ -304,9 +310,10 @@ class mdTokenizer:
         self.currIndex += 1
         self.skipWhiteSpace()
         text = self.eatCharsMarkup()
-        self.tokens.append(
-            {"type": tokType.BULLET, "content": text}
-        )
+        self.tokens.append({
+            "type": tokType.BULLET,
+            "content": text
+        })
 
     # TODO Check if block is properly formatted
     def tokenizeCodeBlock(self):
@@ -370,18 +377,18 @@ class mdTokenizer:
         """ General driver of the entire tokenizer. 
             It applies the tokenizing rules based on the context detected
             by the first character of the stream which has not yet been consumed """
-        while(self.src.checkEOF()):
+        while self.src.checkEOF():
             self.getNewLine()
             self.skipWhiteSpaceNewLine()
             # Standard heading starting with #
             if self.currChar == '#' and self.peekNext() == ' ':
                 self.tokenizeMarkedHeading()
             # Underlined heading
-            elif(src.lookAheadLineTest("^(-{3,}|={3,})")):
+            elif src.lookAheadLineTest("^(-{3,}|={3,})"):
                 self.tokenizeUnmarkedHeading()
             # Either a bullet or checklist item
             elif self.currChar == '-' and self.peekNext() == ' ':
-                if(self.isCheckItemOrBullet() == 1):
+                if self.isCheckItemOrBullet() == 1:
                     self.tokenizeCheckItem()
                 else:
                     self.tokenizeBullet()
@@ -390,24 +397,26 @@ class mdTokenizer:
                 print("image")
                 self.tokenizeImage()
             # Normal link
-            elif(self.currChar == '['):
+            elif self.currChar == '[':
                 self.tokenizeLink()
             # Bullet starting with a +
-            elif(self.currChar == '+'):
+            elif self.currChar == '+':
                 self.tokenizeBullet()
             # Bullet starting with a *
-            elif(self.currChar == '*' and self.peekNext() == " "):
+            elif self.currChar == '*' and self.peekNext() == " ":
                 self.tokenizeBullet()
-            elif(self.currChar == '`' and self.peekNext() == '`' and self.peekNext(2) == '`'):
+            elif self.currChar == '`' and self.peekNext() == '`' and self.peekNext(2) == '`':
                 self.tokenizeCodeBlock()
-            elif(str.isdigit(self.currChar) and self.peekNext(1) == '.' and self.peekNext(2) == ' '):
+            elif str.isdigit(self.currChar) and self.peekNext(1) == '.' and self.peekNext(2) == ' ':
                 self.tokenizeBullet()
             # Plain sentence
             elif str.isalnum(self.currChar) or self.currChar == '`':
                 self.tokenizeText()
             # Blank line
-            elif(self.checkEmptyLine()):
-                self.tokens.append({"type": tokType.BLANK})
+            elif self.checkEmptyLine():
+                self.tokens.append({
+                    "type": tokType.BLANK
+                })
             # Unhandled case
             else:
                 print("Unknown parsing error!")
