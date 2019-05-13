@@ -15,7 +15,6 @@
 #     Copyright (C) 2019 Yavor Konstantinov
 #
 
-from stream import streamSource
 import sys   # used to exit program when an undesirable state occurs
 from tokenType import tokType
 
@@ -25,17 +24,18 @@ class mdTokenizer:
     by line"""
 
     def __init__(self, source):
-        # Holds a handle to the source class which restricts access to the
 
-        # source file
+        # Handle to the source file
         self.src = source
-        # The current line of text
-        self.text = ""
+        # The contents of the source file
+        self.text = self.src.read()
+        # Index of the last character in the source file
+        self.EOF = len(self.text)
         # The current character
         self.currChar = ''
-        # Current index along the line
+        # Current index along the source
         self.currIndex = 0
-        # The list of tokens
+        # The list of tokens created
         self.tokens = []
 
     def getNext(self):
@@ -56,8 +56,6 @@ class mdTokenizer:
     def skipWhiteSpaceNewLine(self):
         """Resets the current index and consumes whitespace until an any
         character which is not space is reached"""
-        # Reset current index
-        self.currIndex = 0
         # Used to measure indentation levels for lists within lists
         spaceNumberCount = 0
         # Iterate and count until we reach anything which is not a space
@@ -75,7 +73,7 @@ class mdTokenizer:
 
     def checkEmptyLine(self):
         """Check if the current line is an empty line"""
-        if self.currChar == '\n' or self.currChar == '\r':
+        if self.currChar == '\n': 
             return True
         return False
 
@@ -83,19 +81,12 @@ class mdTokenizer:
         """Adds an end of line token to the token list"""
         self.tokens.append({"type": tokType.EOL})
 
-    def getNewLine(self):
-        """ Get and set the next line from the source file """
-        self.text = self.src.returnLine()
-        self.currIndex = 0
-        self.currChar = self.text[self.currIndex]
-
     def eatCharsPlain(self):
         """Consumes characters and returns them to the calling function in the form of
         a string. This function assumes that what is to be consumed is only
         plain characters without any markup. Used for headings"""
         itemText = ""
         while self.currChar != '\n':
-            print(self.currChar)
             itemText += self.currChar
             self.getNext()
         return itemText
@@ -177,18 +168,18 @@ class mdTokenizer:
             "size": headingSize,
             "content": headingText
         })
-        self.addEOL()
 
     def tokenizeUnmarkedHeading(self):
         """ Tokenize headings which are underlined """
         textContent = self.eatCharsMarkup()
         # skip over the next line since it is useless to parse
-        src.returnLine()
+        while self.currChar != '\n':
+            self.getNext()
+
         self.tokens.append({
             "type": tokType.UHEADING,
             "content": textContent
         })
-        self.addEOL()
 
     def tokenizeText(self):
         """Tokenizes a line of marked up text"""
@@ -197,6 +188,7 @@ class mdTokenizer:
             self.tokens.append({
                 "type": tokType.BLANK
             })
+
         # Case of any other text
         else:
             textContent = self.eatCharsMarkup()
@@ -448,15 +440,16 @@ class mdTokenizer:
         """ General driver of the entire tokenizer. 
             It applies the tokenizing rules based on the context detected
             by the first character of the stream which has not yet been consumed """
-        while self.src.checkEOF():
-            self.getNewLine()
+        while self.currIndex + 1 != self.EOF:
+            if self.currChar == '\n':
+                self.getNext()
             self.skipWhiteSpaceNewLine()
             # Standard heading starting with #
             if self.currChar == '#' and self.peekNext() == ' ':
                 self.tokenizeMarkedHeading()
             # Underlined heading
-            elif src.lookAheadLineTest("^(-{3,}|={3,})"):
-                self.tokenizeUnmarkedHeading()
+            #elif src.lookAheadLineTest("^(-{3,}|={3,})"):
+             #   self.tokenizeUnmarkedHeading()
             elif self.currChar == '_':
                 if self.isHR('_') == True:
                     self.insertHR()
@@ -465,7 +458,6 @@ class mdTokenizer:
                 if self.isHR('-') == True:
                     self.insertHR()
                 elif self.isCheckItemOrBullet() == 1:
-                    print("bullet")
                     self.tokenizeCheckItem()
                 else:
                     self.tokenizeBullet()
@@ -478,7 +470,6 @@ class mdTokenizer:
                     self.insertHR()
                 elif self.peekNext() == ' ':
                     self.tokenizeBullet()
-                print("Exit bullet case")
             # Image link
             elif self.currChar == '!' and self.peekNext() == '[':
                 self.tokenizeImage()
@@ -500,7 +491,7 @@ class mdTokenizer:
 
 # temp test
 if __name__ == "__main__":
-   src = streamSource("test.md")
+   src = open("test.md", "r")
    tok = mdTokenizer(src)
    tok.tokenize()
    print(tok.returnTokenList())
