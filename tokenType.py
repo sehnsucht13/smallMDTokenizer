@@ -32,3 +32,5 @@ class tokType(Enum):
     INDENT = 15
     # Block Quotes
     BLOCKQUOTE = 16
+    # Image
+    IMAGE = 17

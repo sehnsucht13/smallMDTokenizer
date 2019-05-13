@@ -148,13 +148,11 @@ class mdTokenizer:
             if headingSize != 6:
                 headingSize += 1
 
-        print("Here is the char:" + self.currChar)
         # Skip over intial whitespace
         self.skipWhiteSpace()
         
-        print("Here is the char:" + self.currChar)
         # Add contents of heading
-        headingText = self.eatCharsPlain()
+        headingText = self.eatCharsMarkup()
 
         # Append to token list
         self.tokens.append(
@@ -163,9 +161,7 @@ class mdTokenizer:
 
     def tokenizeUnmarkedHeading(self):
         """ Tokenize headings which are underlined """
-        textContent = ""
-        while(self.getNext() != '\n'):
-            textContent += self.currChar
+        textContent = self.eatCharsMarkup()
         # skip over the next line since it is useless to parse
         src.returnLine()
         self.tokens.append({
@@ -175,9 +171,12 @@ class mdTokenizer:
         self.addEOL()
 
     def tokenizeText(self):
-        """Tokenizes a standard line of text"""
+        """Tokenizes a line of marked up text"""
         textContent = self.eatCharsMarkup()
-        self.tokens.append({"type": tokType.MARKUPTEXT, "content": textContent})
+        self.tokens.append({
+            "type": tokType.MARKUPTEXT,
+            "content": textContent
+            })
 
 
     def tokenizeLink(self):
@@ -199,39 +198,82 @@ class mdTokenizer:
         while(self.getNext() != ')'):
             linkPath += self.currChar
 
-        self.tokens.append(
-            {"type": tokType.LINK, "title": linkTitle, "path": linkPath})
+        self.tokens.append({
+            "type": tokType.LINK, 
+            "title": linkTitle, 
+            "path": linkPath
+            })
 
     def tokenizeImage(self):
         """ Tokenizes an image link """
-        # skip over the ! char which indicates that it is an image
+        imgDesc = ""
+        imgURL = ""
+        imgTitle = ""
+
+        if(self.currChar == '!'):
+            self.getNext()
+
+        # Skip over the opening [ bracket
         self.getNext()
-        # The image link in standard markdown is just like the standard link
-        self.tokenizeLink()
+        
+        # retrieve the description
+        while self.currChar != ']':
+            imgDesc += self.currChar
+            self.getNext()
+        
+        print(imgDesc)
+        # Skip over the closing ] bracket
+        self.getNext()
+        # Skip over the (
+        self.getNext()
+
+        # Retrieve the url
+        while self.currChar != ')' and self.currChar != '"':
+            imgURL += self.currChar
+            self.getNext()
+
+        print(imgURL)
+
+        # Retrieve the link title
+        if self.currChar == '"':
+            self.getNext()
+            while self.currChar != '"':
+                imgTitle += self.currChar
+                self.getNext()
+
+
+        # skip over the )
+        self.getNext()
+        self.getNext()
+
+        self.tokens.append({
+                "type": tokType.IMAGE,
+                "desc": imgDesc,
+                "url": imgURL,
+                "title": imgTitle
+            })
+
 
     def tokenizeCheckItem(self):
         """ Tokenize a checklist item of the form:
             - [ ] ITEM """
         status = None
-        checkItemContent = ""
         self.skipWhiteSpace()
         # Skip over the -
         self.getNext()
         self.skipWhiteSpace()
-        # Skip over [
+        # Skip over the beginning [
         self.getNext()
 
         if(self.currChar == 'x'):
             status = True
 
-        # Skip over ]
+        # Skip over the closing ]
         self.getNext()
         self.getNext()
         self.skipWhiteSpace()
-        while(self.currChar != '\n'):
-            checkItemContent += self.currChar
-            self.getNext()
-
+        
+        checkItemContent = self.eatCharsMarkup()
         self.tokens.append(
             {"type": tokType.CHECKMARK, "status": status, "content": checkItemContent})
         self.addEOL()
@@ -322,19 +364,20 @@ class mdTokenizer:
             self.getNewLine()
             self.skipWhiteSpaceNewLine()
             # Standard heading starting with #
-            if self.currChar == '#':
+            if self.currChar == '#' and self.peekNext() == ' ':
                 self.tokenizeMarkedHeading()
             # Underlined heading
             elif(src.lookAheadLineTest("^(-{3,}|={3,})")):
                 self.tokenizeUnmarkedHeading()
             # Either a bullet or checklist item
-            elif(self.currChar == '-'):
+            elif self.currChar == '-' and self.peekNext() == ' ':
                 if(self.isCheckItemOrBullet() == 1):
                     self.tokenizeCheckItem()
                 else:
                     self.tokenizeBullet()
             # Image link
-            elif(self.currChar == '!'):
+            elif self.currChar == '!':
+                print("image")
                 self.tokenizeImage()
             # Normal link
             elif(self.currChar == '['):
