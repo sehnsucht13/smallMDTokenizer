@@ -38,6 +38,7 @@ class mdTokenizer:
         self.currIndex = 0
         # The list of tokens created
         self.tokens = []
+        self.blankFlag = False
 
     def getNext(self):
         """ Return the next character in the current line"""
@@ -186,6 +187,7 @@ class mdTokenizer:
         """Tokenizes a line of marked up text"""
         # Case of an empty line
         if self.currChar == '\n':
+            self.blankFlag = True
             self.tokens.append({
                 "type": tokType.BLANK
             })
@@ -429,13 +431,17 @@ class mdTokenizer:
 
     def insertHR(self):
         """ Insert a horizontal rule token into the token stream """
+        while self.currChar != '\n':
+            self.getNext()
+
+        self.getNext()
         self.tokens.append({
             "type": tokType.HR
             })
 
     def isUnderlinedHeading(self):
         # starting position of next line
-        startPos = 0
+        startPos = 1
         # End position of next line. Represents \n
         endPos = 0
         # Find the beginning of next string
@@ -453,12 +459,15 @@ class mdTokenizer:
             endPos += 1
 
         endPos += self.currIndex
-        endPos += 1
+        endPos += 1 
 
+        string = self.text[startPos:endPos]
+        print(string)
         searchExp = re.compile("^(-{3,}|={3,})\n")
-        print("Did the test")
-        output =searchExp.fullmatch(self.text, startPos, endPos)
-        print("Output" + output)
+        print(len(string))
+        output = searchExp.fullmatch(string)
+
+        return output
 
     def tokenize(self):
         """ General driver of the entire tokenizer. 
@@ -482,6 +491,7 @@ class mdTokenizer:
             elif self.currChar == '-': 
                 if self.isHR('-') == True:
                     self.insertHR()
+                    self.blankFlag = False
                 elif self.isCheckItemOrBullet() == 1:
                     self.tokenizeCheckItem()
                 else:
