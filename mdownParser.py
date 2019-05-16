@@ -43,7 +43,12 @@ class mdTokenizer:
     def getNext(self):
         """ Return the next character in the current line"""
         self.currIndex += 1
-        self.currChar = self.text[self.currIndex]
+        if self.currIndex >= self.EOF:
+            self.currChar = '\n'
+        else:
+            print(self.text[self.currIndex])
+            self.currChar = self.text[self.currIndex]
+        
         return self.currChar
 
     def peekNext(self, n=1):
@@ -442,7 +447,8 @@ class mdTokenizer:
             "type": tokType.HR
             })
 
-    def isUnderlinedHeading(self):
+    def getNextLine(self):
+        """ Returns the start and end positions of the next line """
         # starting position of next line
         startPos = 1
         # End position of next line. Represents \n
@@ -462,12 +468,22 @@ class mdTokenizer:
             endPos += 1
 
         endPos += self.currIndex
+        # Skip over the \n
         endPos += 1 
+        return (startPos, endPos)
 
-        string = self.text[startPos:endPos]
-        print(string)
+    def skipNextLine(self):
+        start, end = self.getNextLine()
+        # getNextLine returns the index of the \n of the next line
+        # we need to move to the next character
+        self.currIndex = end
+        self.getNext()
+
+
+    def isUnderlinedHeading(self):
+        start, end = self.getNextLine()
+        string = self.text[start:end]
         searchExp = re.compile("^(-{3,}|={3,})\n")
-        print(len(string))
         output = searchExp.fullmatch(string)
 
         return output
@@ -476,7 +492,7 @@ class mdTokenizer:
         """ General driver of the entire tokenizer. 
             It applies the tokenizing rules based on the context detected
             by the first character of the stream which has not yet been consumed """
-        while self.currIndex + 1 != self.EOF:
+        while self.currIndex + 1 < self.EOF:
             if self.currChar == '\n':
                 self.getNext()
             self.skipWhiteSpaceNewLine()
@@ -486,6 +502,7 @@ class mdTokenizer:
             # Underlined heading
             elif self.isUnderlinedHeading():
                 self.tokenizeUnmarkedHeading()
+                self.skipNextLine()
             elif self.currChar == '_':
                 if self.isHR('_') == True:
                     self.insertHR()
