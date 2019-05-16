@@ -184,8 +184,8 @@ class mdTokenizer:
         """ Tokenize headings which are underlined """
         textContent = self.eatCharsMarkup()
         # skip over the next line since it is useless to parse
-        while self.currChar != '\n':
-            self.getNext()
+        while self.getNext() != '\n':
+            pass
 
         self.tokens.append({
             "type": tokType.UHEADING,
@@ -472,15 +472,8 @@ class mdTokenizer:
         endPos += 1 
         return (startPos, endPos)
 
-    def skipNextLine(self):
-        start, end = self.getNextLine()
-        # getNextLine returns the index of the \n of the next line
-        # we need to move to the next character
-        self.currIndex = end
-        self.getNext()
-
-
     def isUnderlinedHeading(self):
+        """ Check if the next line is an underlined heading """
         start, end = self.getNextLine()
         string = self.text[start:end]
         searchExp = re.compile("^(-{3,}|={3,})\n")
@@ -502,7 +495,6 @@ class mdTokenizer:
             # Underlined heading
             elif self.isUnderlinedHeading():
                 self.tokenizeUnmarkedHeading()
-                self.skipNextLine()
             elif self.currChar == '_':
                 if self.isHR('_') == True:
                     self.insertHR()
