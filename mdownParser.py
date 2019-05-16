@@ -48,7 +48,11 @@ class mdTokenizer:
 
     def peekNext(self, n=1):
         """ Return the next character without incrementing the position"""
-        return self.text[self.currIndex + n]
+        if(n + self.currIndex == self.EOF):
+            print("True")
+            return '\n'
+        else:
+            return self.text[self.currIndex + n]
 
     def skipWhiteSpace(self):
         """Skips all whitespace until the next character is encountered"""
@@ -194,6 +198,7 @@ class mdTokenizer:
 
         # Case of any other text
         else:
+            self.blankFlag = False
             textContent = self.eatCharsMarkup()
             self.tokens.append({
                 "type": tokType.MARKUPTEXT,
@@ -422,9 +427,7 @@ class mdTokenizer:
         while self.peekNext(pos) == char:
             count += 1
             pos += 1
-            print("Yea")
-        print(count)
-        if self.peekNext(pos) == '\n' and count >= 3:
+        if self.peekNext(pos) == '\n' and count >= 3 and self.blankFlag == True:
             return True
         else:
             return False
@@ -482,7 +485,6 @@ class mdTokenizer:
                 self.tokenizeMarkedHeading()
             # Underlined heading
             elif self.isUnderlinedHeading():
-                print("Got a match")
                 self.tokenizeUnmarkedHeading()
             elif self.currChar == '_':
                 if self.isHR('_') == True:
