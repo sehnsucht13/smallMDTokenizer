@@ -1,16 +1,20 @@
 * Todo
-- [ ] Create functions retrieve a token and its properties
-- [ ] Support blocks and block tokens
-- [ ] Support horizontal rules in all 3 types
-- [ ] Parse syntax for crossing out content
-- [ ] Handle numbered lists which are indented(list within a list)
-- [ ] Handle numbered lists and lists using - or +
-- [ ] Handle block quotes
-- [ ] Handle underscores for italic and bold markup
-- [ ] Handle inline code(something like `this`)
-- [ ] Handle escapes
-- [ ] Handle line breaks(\, double space or <br>)
-- [ ] Fix bug with heading content not being saved properly
-- [x] Add more comments
 - [ ] Clean up functions
-- [ ] Check if the blocks are properly formatted
+- [ ] Check if the blocks are properly formatted on the current line and accross multiple lines
+- [ ] Add support for inline links/images
+- [ ] Add support for css sheet to be applied along with the generated html
+- [ ] look into compiling with wasm to run on github pages
+- [ ] Handle escape characters
+- [ ] Handle line breaks(\, double space or <br>)
+- [ ] Fix bug with heading content not being saved properly for the first heading
+- [ ] Add support for blockquotes
+- [ ] Add support for indent programming text
+- [x] Support horizontal rules in all 2 types
+- [x] Parse syntax for crossing out content
+- [ ] Create functions retrieve a token and its properties(cancelled)
+- [x] Handle numbered lists which are indented(list within a list)
+- [x] Handle numbered lists and lists using - or +
+- [x] Handle block quotes
+- [x] Handle underscores for italic and bold markup
+- [x] Handle inline code(something like `this`)
+- [x] Add more comments
