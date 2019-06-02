@@ -30,6 +30,7 @@ class HTMLConverter():
         self.currIndex = 0
         # Holds the current token
         self.currTok = self.tokens[self.currIndex]
+        print(self.currTok)
 
     def nextTok(self):
         """ Increments the position, sets the next token and returns it"""
@@ -37,20 +38,83 @@ class HTMLConverter():
         self.currIndex += 1
         return self.currTok
 
-    def peekTok(self):
+    def peekTok(self, n=1):
         """ Returns the next token in stream without incrementing the
             position """
-        return self.tokens[self.currIndex + 1]
+        return self.tokens[self.currIndex + n]
 
     def write(self, htmlString):
         """ Writes the provided HTML string to the output file 
             which is represented by the var called fileHandle """
-            self.fileHandle.write(htmlString + "\n")
+        self.fileHandle.write(htmlString + "\n")
+
+    def isMatch(self, text, singleLine, token, index):
+        """ Check if the provided token is matched within the current block
+            or only the current line."""
+            # Get the next token
+        textLen = len(text)
+        if singleLine and index + 1 < textLen:
+            currIndex = index + 1
+            currTok = text[currIndex]
+            while currIndex < len(text):
+                if currTok["type"] == token:
+                    return True
+                else:
+                    currIndex += 1
+                    currTok = text[currIndex]
+                    return False
+
+
+
+    def tokToString(self, token):
+        """ Convert any type of text markup token(bold, italics...) to its
+            text representation if it cannot be matched with a closing pair """
+        if token["type"] == tokType.BOLD:
+            return "**"
+        elif token["type"] == tokType.ICODE:
+            return "`"
+        elif token["type"] == tokType.CROSS:
+            return "~~"
+        elif token["type"] == tokType.ITALIC:
+            return "*"
+
+    def convertText(self, text, singleLine):
+        """ Converts text tokens to their HTML form. When a special token
+            such as bold or italic, they are converted only if a matching 
+            is found in the same block. Blocks are defined with spaces at 
+            their end. If a matching token is not found inside the block 
+            then the token is turned into its text representation """
+                
+        markUpText = ""
+        textLen = len(text)
+
+        if singleLine:
+            index = 0
+            while index < textLen:
+                subTok = text[index]
+                if subTok["type"] == tokType.PLAIN:
+                    markUpText += subTok["content"]
+                else:
+                    # check if the current token matches on the line
+                    if self.isMatch(text, True, subTok['type'], index):
+                        # need function to retrieve the html representation of the token
+                        print("Got a match")
+                        pass
+                    else:
+                        # Need a function to retrieve the literal text translation
+                        print("No match :(")
+                        pass
+
+                    
+
+                index += 1
+
+            return markUpText 
 
     def convertHeading(self):
         """ Convert a heading to html and add it to output file """
         size = self.currTok['size']
-        content = self.currTok['content']
+        content = self.convertText(self.currTok['content'], True)
         outputString = "<h{0}>{1}</h{0}>".format(size, content)
         self.write(outputString)
 
@@ -67,27 +131,21 @@ class HTMLConverter():
         imgPath = self.currTok['path']
         outputString = "<img src=\"{0}\" alt=\"{1}\" width=\"200\" height=\"200\">"
 
-    def convertTokens():
-        while True:
+    def convertTokens(self):
+        streamLen = len(self.tokens)
+        while self.currIndex < streamLen:
             # Marked Heading
             if self.currTok['type'] == tokType.MHEADING:
                 self.convertHeading()
-                self.nextTok()
             # Regular link
             elif self.currTok['type'] == tokType.LINK:
                 self.convertLink()
-                self.nextTok()
             # Image link
             elif self.currTok['type'] == tokType.IMAGE:
                 self.convertImage()
-                self.nextTok()
             # Blank line
-            elif self.currTok['type'] == tokType.Blank:
+            elif self.currTok['type'] == tokType.BLANK:
                 self.write("")
-                self.nextTok()
-            # Exit the loop
-            elif self.currTok['type'] == tokType.EOF:
-                break
 
-
+            self.nextTok()
 
