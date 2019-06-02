@@ -32,12 +32,14 @@ class mdTokenizer:
         self.text = self.src.read()
         # Index of the last character in the source file
         self.EOF = len(self.text)
-        # The current character
-        self.currChar = ''
         # Current index along the source
         self.currIndex = 0
         # The list of tokens created
         self.tokens = []
+        # The current character
+        self.currChar = self.text[self.currIndex]
+        # Indicates if the previous line was a blank. 
+        # used to recognize horizontal ruling
         self.blankFlag = False
 
     def getNext(self):
