@@ -3,42 +3,42 @@ from enum import Enum
 
 class tokType(Enum):
     # Heading starting with a #
-    MHEADING = 1
+    MHEADING = auto()
     # Underlined heading
-    UHEADING = 2
+    UHEADING = auto()
     # Checkmark
-    CHECKMARK = 3
+    CHECKMARK = auto()
     # Regular link(anything but an image link)
-    LINK = 5
+    LINK = auto()
     # Plain text in a heading. No markup is recognized
-    PLAIN = 6
+    PLAIN = auto()
     # Marked up text
-    MARKUPTEXT = 7
+    MARKUPTEXT = auto()
     # Bullet mark
-    BULLET = 8
+    BULLET = auto()
     # End of line
-    EOL = 9
+    EOL = auto()
     # End of file
-    EOF = 10
+    EOF = auto()
     # Code block
-    CBLOCK = 11
+    CBLOCK = auto()
     # Blank line
-    BLANK = 12
+    BLANK = auto()
     # Italic
-    ITALIC = 13
+    ITALIC = auto()
     # Bold
-    BOLD = 14
+    BOLD = auto()
     # Indent
-    INDENT = 15
+    INDENT = auto()
     # Block Quotes
-    BLOCKQUOTE = 16
+    BLOCKQUOTE = auto()
     # Image
-    IMAGE = 17
+    IMAGE = auto()
     # Inline Code
-    ICODE = 18
+    ICODE = auto()
     # Horizontal Rule
-    HR = 19
+    HR = auto()
     # Numbered bullet
-    NUMBULLET = 20
+    NUMBULLET = auto()
     # Crossed out text
-    CROSS = 21
+    CROSS = auto()
