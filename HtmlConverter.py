@@ -50,36 +50,33 @@ class HTMLConverter:
             which is represented by the var called fileHandle """
         self.fileHandle.write(htmlString + "\n")
 
-    def isMatch(self, text, token, singleLine):
-        """ Check if the provided token is matched in the current line or 
+    def isMatch(self, text, endTokType, singleLine):
+        """ Check if the provided token exists in the current line or 
             the current block if no flag is provided """
         # Get the next token
-        print("\n")
-        print("Matching")
         print(text)
         textLen = len(text)
-        index = 0
-        if singleLine and index + 1 != textLen:
-            currIndex = index + 1
-            currTok = text[currIndex]
+        currIndex = 0
+        if singleLine and currIndex + 1 < textLen:
             while currIndex < len(text):
-                if currTok["type"] == token:
+                currTok = text[currIndex]
+                if currTok["type"] == endTokType:
                     return True
                 else:
                     currIndex += 1
-                    currTok = text[currIndex]
-                    return False
+
+            return False
 
     def tokToString(self, token):
         """ Convert any type of text markup token(bold, italics...) to its
             text representation if it cannot be matched with a closing pair """
-        if token["type"] == tokType.BOLD:
+        if token["type"] == tokType.RBOLD or token["type"] == tokType.LBOLD:
             return "**"
         elif token["type"] == tokType.ICODE:
             return "`"
         elif token["type"] == tokType.CROSS:
             return "~~"
-        elif token["type"] == tokType.ITALIC:
+        elif token["type"] == tokType.LITALIC or token["type"] == tokType.RITALIC:
             return "*"
 
     def tokToHtml(self, token, close):
@@ -87,18 +84,18 @@ class HTMLConverter:
             opening or closing tag depending on whether the argument \"close\"
             is true or not """
         if close is True:
-            if token["type"] == tokType.BOLD:
+            if token["type"] == tokType.LBOLD:
                 return "</strong>"
-            elif token["type"] == tokType.ITALIC:
+            elif token["type"] == tokType.LITALIC:
                 return "</em>"
             elif token["type"] == tokType.CROSS:
                 return "</del>"
             elif token["type"] == tokType.ICODE:
                 return "</code>"
             else:
-                if token["type"] == tokType.BOLD:
+                if token["type"] == tokType.RBOLD:
                     return "<strong>"
-                elif token["type"] == tokType.ITALIC:
+                elif token["type"] == tokType.RITALIC:
                     return "<em>"
                 elif token["type"] == tokType.CROSS:
                     return "<del>"
@@ -122,13 +119,21 @@ class HTMLConverter:
                 if subTok["type"] == tokType.PLAIN:
                     markUpText += subTok["content"]
                 else:
+                    searchTokType = None
+                    if subTok["type"] == tokType.LBOLD:
+                        searchTokType = tokType.RBOLD
+                    elif subTok["type"] == tokType.LITALIC:
+                        searchTokType = tokType.RITALIC
+                    elif subTok["type"] == tokType.CROSS:
+                        searchTokType = tokType.CROSS
+                    elif subTok["type"] == tokType.ICODE:
+                        searchTokType = tokType.ICODE
                     # check if the current token matches on the line
-                    if self.isMatch(text[index + 1 :], subTok["type"], True):
-                        # need function to retrieve the html representation of the token
-                        print("Got a match")
+                    if self.isMatch(text[index + 1 :], searchTokType, True):
+                        print("Match")
+                        return True
                     else:
-                        # Need a function to retrieve the literal text translation
-                        print("No match :(")
+                        return False
 
                 index += 1
 
