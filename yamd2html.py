@@ -21,6 +21,7 @@ from sys import exit
 import argparse
 import os
 
+
 def checkArgPath(args):
     """ Checks whether or not the provided file paths exists. If needed, 
         files and folders are created to accomodate the output path
@@ -31,7 +32,7 @@ def checkArgPath(args):
             # Case of providing a valid output file
             if os.path.isfile(args.output) is True:
                 outputFileHandle = open(args.output, "w")
-            # Case of outptut file not existing. Create any new directories 
+            # Case of outptut file not existing. Create any new directories
             # along the way
             else:
                 outputPath, outputFile = os.path.split(args.output)
@@ -46,7 +47,7 @@ def checkArgPath(args):
             inputTail = inputTail.split('.')[0]
             inputTail += ".html"
             outputFileHandle = open(os.path.join(inputHead, inputTail), "w+")
-        
+
         # Open the input file
         inputFileHandle = open(args.path)
 
@@ -56,16 +57,20 @@ def checkArgPath(args):
                 double check that you provided it correctly!""")
         sys.exit(1)
 
+
 def main():
     parser = argparse.ArgumentParser(
         description='Convert the provided file from Markdown to HTML')
+    parser.add_argument('path', help="The path to the file to be converted")
     parser.add_argument(
-        'path', help="The path to the file to be converted")
-    parser.add_argument(
-        '-o', '--output', help="The path for the output file. If it is not provided, an HTML file will be created in the same folder with the same file name but ending with a .html file extension.")
+        '-o',
+        '--output',
+        help=
+        "The path for the output file. If it is not provided, an HTML file will be created in the same folder with the same file name but ending with a .html file extension."
+    )
     args = parser.parse_args()
-   
-   # File handles for input and output file 
+
+    # File handles for input and output file
     inputFile, outputFile = checkArgPath(args)
 
     tokenizer = mdTokenizer(inputFile)
@@ -77,6 +82,7 @@ def main():
     converter = HTMLConverter(tokens, outputFile)
     # Convert the tokens and output to an HTML file
     converter.convertTokens()
+
 
 if __name__ == '__main__':
     main()

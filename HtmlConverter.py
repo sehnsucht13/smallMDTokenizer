@@ -17,10 +17,12 @@
 
 from tokenType import tokType
 
+
 class HTMLConverter():
     """ Convert a stream of tokens passed by \"tokenStream\" into a 
         valid HTML file which is saved in the file represented by 
         \"outputFileHandle\" """
+
     def __init__(self, tokenStream, outputFileHandle):
         # File handle to the output file
         self.fileHandle = outputFileHandle
@@ -48,7 +50,12 @@ class HTMLConverter():
             which is represented by the var called fileHandle """
         self.fileHandle.write(htmlString + "\n")
 
-    def isMatch(self, text, token, singleLine,):
+    def isMatch(
+            self,
+            text,
+            token,
+            singleLine,
+    ):
         """ Check if the provided token is matched in the current line or 
             the current block if no flag is provided """
         # Get the next token
@@ -68,8 +75,6 @@ class HTMLConverter():
                     currTok = text[currIndex]
                     return False
 
-
-
     def tokToString(self, token):
         """ Convert any type of text markup token(bold, italics...) to its
             text representation if it cannot be matched with a closing pair """
@@ -86,15 +91,15 @@ class HTMLConverter():
         """ Return the HTML representation of the token. This can be either the
             opening or closing tag depending on whether the argument \"close\"
             is true or not """
-            if close is True:
-                if token["type"] == tokType.BOLD:
-                    return "</strong>"
-                elif token["type"] == tokType.ITALIC:
-                    return "</em>"
-                elif token["type"] == tokType.CROSS:
-                    return "</del>"
-                elif token["type"] == tokType.ICODE:
-                    return "</code>"
+        if close is True:
+            if token["type"] == tokType.BOLD:
+                return "</strong>"
+            elif token["type"] == tokType.ITALIC:
+                return "</em>"
+            elif token["type"] == tokType.CROSS:
+                return "</del>"
+            elif token["type"] == tokType.ICODE:
+                return "</code>"
             else:
                 if token["type"] == tokType.BOLD:
                     return "<strong>"
@@ -111,7 +116,7 @@ class HTMLConverter():
             is found in the same block. Blocks are defined with spaces at 
             their end. If a matching token is not found inside the block 
             then the token is turned into its text representation """
-                
+
         markUpText = ""
         textLen = len(text)
 
@@ -132,7 +137,7 @@ class HTMLConverter():
 
                 index += 1
 
-            return markUpText 
+            return markUpText
 
     def convertHeading(self):
         """ Convert a heading to html and add it to output file """
@@ -171,4 +176,3 @@ class HTMLConverter():
                 self.write("")
 
             self.nextTok()
-

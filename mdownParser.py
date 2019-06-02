@@ -15,7 +15,7 @@
 #     Copyright (C) 2019 Yavor Konstantinov
 #
 
-import sys   # used to exit program when an undesirable state occurs
+import sys  # used to exit program when an undesirable state occurs
 from tokenType import tokType
 import re
 
@@ -38,7 +38,7 @@ class mdTokenizer:
         self.tokens = []
         # The current character
         self.currChar = self.text[self.currIndex]
-        # Indicates if the previous line was a blank. 
+        # Indicates if the previous line was a blank.
         # used to recognize horizontal ruling
         self.blankFlag = False
 
@@ -49,12 +49,12 @@ class mdTokenizer:
             self.currChar = '\n'
         else:
             self.currChar = self.text[self.currIndex]
-        
+
         return self.currChar
 
     def peekNext(self, n=1):
         """ Return the next character without incrementing the position """
-        if(n + self.currIndex == self.EOF):
+        if (n + self.currIndex == self.EOF):
             return '\n'
         else:
             return self.text[self.currIndex + n]
@@ -86,14 +86,13 @@ class mdTokenizer:
         # If the number of spaces is more than 0 then we have indented text
         if spaceNumberCount != 0:
             self.tokens.append({
-                    "type": tokType.INDENT,
-                    "count": spaceNumberCount
-                })
-
+                "type": tokType.INDENT,
+                "count": spaceNumberCount
+            })
 
     def checkEmptyLine(self):
         """Check if the current line is an empty line"""
-        if self.currChar == '\n': 
+        if self.currChar == '\n':
             return True
         return False
 
@@ -124,7 +123,9 @@ class mdTokenizer:
         textArr = []
         while self.currChar != '\n':
             # Case of bold text like **WORD**
-            if (self.currChar == '*' and self.peekNext() == '*') or (self.currChar == '_' and self.peekNext() == '_'):
+            if (self.currChar == '*'
+                    and self.peekNext() == '*') or (self.currChar == '_'
+                                                    and self.peekNext() == '_'):
                 #if self.peekPrev() != ' ' or self.peekPrev == False:
                 # Skip over the following *
                 self.getNext()
@@ -140,46 +141,50 @@ class mdTokenizer:
                 self.getNext()
 
                 # Add token for italic text
-                textArr.append({
-                    "type" : tokType.ITALIC
-                })
+                textArr.append({"type": tokType.ITALIC})
 
             # Inline code
             elif self.currChar == '`':
                 # skip over the `
                 self.getNext()
                 # Add token
-                textArr.append({
-                    "type": tokType.ICODE     
-                })
+                textArr.append({"type": tokType.ICODE})
 
             # Small addition to regular markdown markup which supports crossed out text
             # Uses ~~Crossed out text~~
             elif self.currChar == '~' and self.peekNext() == '~':
                 self.getNext()
                 self.getNext()
-                textArr.append({
-                    "type": tokType.CROSS
-                })
+                textArr.append({"type": tokType.CROSS})
 
             # Default case for plain text
             else:
                 textContent = ""
                 while self.currChar not in ['\n', '*', '_', '[', '`', '(']:
                     # Check for escape characters
-                    if self.currChar == '\\' and self.peekNext() in ['(', ')', '[', ']', '\\', '_', '*', '_', '.', '!', '-', '`',]:
+                    if self.currChar == '\\' and self.peekNext() in [
+                            '(',
+                            ')',
+                            '[',
+                            ']',
+                            '\\',
+                            '_',
+                            '*',
+                            '_',
+                            '.',
+                            '!',
+                            '-',
+                            '`',
+                    ]:
                         self.getNext()
                         textContent += self.currChar
                     else:
                         textContent += self.currChar
-                    
+
                     self.getNext()
 
                 # Add token for plain text with its content
-                textArr.append({
-                    "type": tokType.PLAIN,
-                    "content": textContent
-                })
+                textArr.append({"type": tokType.PLAIN, "content": textContent})
 
         return textArr
 
@@ -194,7 +199,7 @@ class mdTokenizer:
 
         # Skip over intial whitespace
         self.skipWhiteSpace()
-        
+
         # Add contents of heading
         headingText = self.eatCharsMarkup()
 
@@ -212,19 +217,14 @@ class mdTokenizer:
         while self.getNext() != '\n':
             pass
 
-        self.tokens.append({
-            "type": tokType.UHEADING,
-            "content": textContent
-        })
+        self.tokens.append({"type": tokType.UHEADING, "content": textContent})
 
     def tokenizeText(self):
         """Tokenizes a line of marked up text"""
         # Case of an empty line
         if self.currChar == '\n':
             self.blankFlag = True
-            self.tokens.append({
-                "type": tokType.BLANK
-            })
+            self.tokens.append({"type": tokType.BLANK})
 
         # Case of any other text
         else:
@@ -233,8 +233,7 @@ class mdTokenizer:
             self.tokens.append({
                 "type": tokType.MARKUPTEXT,
                 "content": textContent
-                })
-
+            })
 
     def tokenizeLink(self):
         """Tokenizes a standard markdown link"""
@@ -256,10 +255,10 @@ class mdTokenizer:
             linkPath += self.currChar
 
         self.tokens.append({
-            "type": tokType.LINK, 
-            "title": linkTitle, 
+            "type": tokType.LINK,
+            "title": linkTitle,
             "path": linkPath
-            })
+        })
 
     def tokenizeImage(self):
         """ Tokenizes an image link """
@@ -267,17 +266,17 @@ class mdTokenizer:
         imgURL = ""
         imgTitle = ""
 
-        if(self.currChar == '!'):
+        if (self.currChar == '!'):
             self.getNext()
 
         # Skip over the opening [ bracket
         self.getNext()
-        
+
         # retrieve the description
         while self.currChar != ']':
             imgDesc += self.currChar
             self.getNext()
-        
+
         # Skip over the closing ] bracket
         self.getNext()
         # Skip over the (
@@ -288,7 +287,6 @@ class mdTokenizer:
             imgURL += self.currChar
             self.getNext()
 
-
         # Retrieve the link title
         if self.currChar == '"':
             self.getNext()
@@ -296,18 +294,16 @@ class mdTokenizer:
                 imgTitle += self.currChar
                 self.getNext()
 
-
         # skip over the )
         self.getNext()
         self.getNext()
 
         self.tokens.append({
-                "type": tokType.IMAGE,
-                "desc": imgDesc,
-                "url": imgURL,
-                "title": imgTitle
-            })
-
+            "type": tokType.IMAGE,
+            "desc": imgDesc,
+            "url": imgURL,
+            "title": imgTitle
+        })
 
     def tokenizeCheckItem(self):
         """ Tokenize a checklist item of the form:
@@ -327,7 +323,7 @@ class mdTokenizer:
         self.getNext()
         self.getNext()
         self.skipWhiteSpace()
-        
+
         checkItemContent = self.eatCharsMarkup()
         self.tokens.append({
             "type": tokType.CHECKMARK,
@@ -372,10 +368,7 @@ class mdTokenizer:
             self.skipWhiteSpace()
             # Consume the chars
             text = self.eatCharsMarkup()
-            self.tokens.append({
-                "type": tokType.NUMBULLET,
-                "content": text
-            })
+            self.tokens.append({"type": tokType.NUMBULLET, "content": text})
 
         # Case of a regular bullet
         else:
@@ -383,14 +376,10 @@ class mdTokenizer:
             self.getNext()
             # Skip over the whitespace
             self.skipWhiteSpace()
-            
+
             # Consume the characters
             text = self.eatCharsMarkup()
-            self.tokens.append({
-                "type": tokType.BULLET,
-                "content": text
-            })
-
+            self.tokens.append({"type": tokType.BULLET, "content": text})
 
     def isHR(self, char):
         """ Count the occurence of a certain type of character on a line of 
@@ -411,9 +400,7 @@ class mdTokenizer:
             self.getNext()
 
         self.getNext()
-        self.tokens.append({
-            "type": tokType.HR
-            })
+        self.tokens.append({"type": tokType.HR})
 
     def getNextLine(self):
         """ Returns the start and end positions of the next line """
@@ -437,7 +424,7 @@ class mdTokenizer:
 
         endPos += self.currIndex
         # Skip over the \n
-        endPos += 1 
+        endPos += 1
         return (startPos, endPos)
 
     def isUnderlinedHeading(self):
@@ -458,7 +445,7 @@ class mdTokenizer:
                 self.getNext()
             self.skipWhiteSpaceNewLine()
             # Standard heading starting with #
-            if self.currChar == '#': 
+            if self.currChar == '#':
                 self.tokenizeMarkedHeading()
             # Underlined heading
             elif self.isUnderlinedHeading():
@@ -467,7 +454,7 @@ class mdTokenizer:
                 if self.isHR('_') == True:
                     self.insertHR()
             # Either a bullet or checklist item
-            elif self.currChar == '-': 
+            elif self.currChar == '-':
                 if self.isHR('-') == True:
                     self.insertHR()
                     self.blankFlag = False
@@ -491,10 +478,9 @@ class mdTokenizer:
             elif self.currChar == '[':
                 self.tokenizeLink()
             # Code blocks
-            elif self.peekPrev == '\n' and self.currChar == '`' and self.peekNext() == '`' and self.peekNext(2) == '`':
-                self.tokens.append({
-                    "type": tokType.CBLOCK
-                    })
+            elif self.peekPrev == '\n' and self.currChar == '`' and self.peekNext(
+            ) == '`' and self.peekNext(2) == '`':
+                self.tokens.append({"type": tokType.CBLOCK})
             # Numbered Bullets
             elif str.isdigit(self.currChar) and self.isNumBullet() == True:
                 self.tokenizeBullet()
@@ -502,17 +488,16 @@ class mdTokenizer:
                 self.tokenizeText()
 
         # Add an EOF token
-        self.tokens.append({
-            "type": "EOF"
-            })
+        self.tokens.append({"type": "EOF"})
 
     def returnTokenList(self):
         """ Return the list of tokens """
         return self.tokens
 
+
 # temp test
-if __name__ == "__main__":
-   src = open("test.md", "r")
-   tok = mdTokenizer(src)
-   tok.tokenize()
-   print(tok.returnTokenList())
+#if __name__ == "__main__":
+#src = open("test.md", "r")
+#tok = mdTokenizer(src)
+#tok.tokenize()
+#print(tok.returnTokenList())
