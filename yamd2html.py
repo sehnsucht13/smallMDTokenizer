@@ -45,7 +45,6 @@ def checkArgPath(args):
             inputHead, inputTail = os.path.split(args.path)
             inputTail = inputTail.split('.')[0]
             inputTail += ".html"
-            print(inputTail)
             outputFileHandle = open(os.path.join(inputHead, inputTail), "w+")
         
         # Open the input file
@@ -73,6 +72,7 @@ def main():
     tokenizer.tokenize()
     # List of tokens extracted from the markdown input file provided
     tokens = tokenizer.returnTokenList()
+    print(tokens)
 
     converter = HTMLConverter(tokens, outputFile)
     # Convert the tokens and output to an HTML file
