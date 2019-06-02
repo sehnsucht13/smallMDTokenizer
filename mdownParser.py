@@ -120,24 +120,53 @@ class mdTokenizer:
         textArr = []
         while self.currChar != "\n":
             # Case of bold text like **WORD**
-            if (self.currChar == "*" and self.peekNext() == "*") or (
-                self.currChar == "_" and self.peekNext() == "_"
+            if (
+                self.currChar == "*"
+                and self.peekNext(1) == "*"
+                and self.peekNext(2) != " "
+            ) or (
+                self.currChar == "_"
+                and self.peekNext(1) == "_"
+                and self.peekNext(2) != " "
             ):
-                # if self.peekPrev() != ' ' or self.peekPrev == False:
-                # Skip over the following *
+
+                # Skip over * and *
                 self.getNext()
                 self.getNext()
-                # Add token for bolded text
-                textArr.append({"type": tokType.BOLD})
+                # Add token for the left run bolded
+                textArr.append({"type": tokType.LBOLD})
+
+            elif (
+                self.peekPrev() != " "
+                and self.currChar == "*"
+                and self.peekNext(1) == "*"
+            ) or (
+                self.peekPrev() != " "
+                and self.currChar == "_"
+                and self.peekNext(1) == "_"
+            ):
+                # Skip over * and *
+                self.getNext()
+                self.getNext()
+                textArr.append({"type": tokType.RBOLD})
+                print("got rbold")
 
             # Case of italic text like *WORD*
-            elif self.currChar == "*" or self.currChar == "_":
+            elif (self.currChar == "*" and self.peekNext(1) != " ") or (
+                self.currChar == "_" and self.peekNext(1) != " "
+            ):
                 # Skip over * to next character
                 self.getNext()
-
                 # Add token for italic text
-                textArr.append({"type": tokType.ITALIC})
+                textArr.append({"type": tokType.LITALIC})
 
+            elif (self.currChar == "*" and self.peekPrev() != " ") or (
+                self.currChar == "_" and self.peekPrev() != " "
+            ):
+                # Skip over * to next character
+                self.getNext()
+                # Add token for italic text
+                textArr.append({"type": tokType.RITALIC})
             # Inline code
             elif self.currChar == "`":
                 # skip over the `
@@ -171,7 +200,9 @@ class mdTokenizer:
                         "-",
                         "`",
                     ]:
+                        # Skip over the /
                         self.getNext()
+                        # Add the escaped character as a normal one
                         textContent += self.currChar
                     else:
                         textContent += self.currChar
