@@ -24,10 +24,14 @@ class tokType(Enum):
     CBLOCK = auto()
     # Blank line
     BLANK = auto()
-    # Italic
-    ITALIC = auto()
-    # Bold
-    BOLD = auto()
+    # left run Italic
+    LITALIC = auto()
+    # Right run italic
+    RITALIC = auto()
+    # Left run bold
+    LBOLD = auto()
+    # Right run bold
+    RBOLD = auto()
     # Indent
     INDENT = auto()
     # Block Quotes

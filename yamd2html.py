@@ -44,7 +44,7 @@ def checkArgPath(args):
         else:
             # Retrieve the path for the new file to be created
             inputHead, inputTail = os.path.split(args.path)
-            inputTail = inputTail.split('.')[0]
+            inputTail = inputTail.split(".")[0]
             inputTail += ".html"
             outputFileHandle = open(os.path.join(inputHead, inputTail), "w+")
 
@@ -53,20 +53,22 @@ def checkArgPath(args):
 
         return (inputFileHandle, outputFileHandle)
     else:
-        print("""The provided path to the input file does not exist. Please
-                double check that you provided it correctly!""")
+        print(
+            """The provided path to the input file does not exist. Please
+                double check that you provided it correctly!"""
+        )
         sys.exit(1)
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description='Convert the provided file from Markdown to HTML')
-    parser.add_argument('path', help="The path to the file to be converted")
+        description="Convert the provided file from Markdown to HTML"
+    )
+    parser.add_argument("path", help="The path to the file to be converted")
     parser.add_argument(
-        '-o',
-        '--output',
-        help=
-        "The path for the output file. If it is not provided, an HTML file will be created in the same folder with the same file name but ending with a .html file extension."
+        "-o",
+        "--output",
+        help="The path for the output file. If it is not provided, an HTML file will be created in the same folder with the same file name but ending with a .html file extension.",
     )
     args = parser.parse_args()
 
@@ -84,5 +86,5 @@ def main():
     converter.convertTokens()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

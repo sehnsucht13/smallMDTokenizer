@@ -18,7 +18,7 @@
 from tokenType import tokType
 
 
-class HTMLConverter():
+class HTMLConverter:
     """ Convert a stream of tokens passed by \"tokenStream\" into a 
         valid HTML file which is saved in the file represented by 
         \"outputFileHandle\" """
@@ -50,12 +50,7 @@ class HTMLConverter():
             which is represented by the var called fileHandle """
         self.fileHandle.write(htmlString + "\n")
 
-    def isMatch(
-            self,
-            text,
-            token,
-            singleLine,
-    ):
+    def isMatch(self, text, token, singleLine):
         """ Check if the provided token is matched in the current line or 
             the current block if no flag is provided """
         # Get the next token
@@ -128,7 +123,7 @@ class HTMLConverter():
                     markUpText += subTok["content"]
                 else:
                     # check if the current token matches on the line
-                    if self.isMatch(text[index + 1:], subTok['type'], True):
+                    if self.isMatch(text[index + 1 :], subTok["type"], True):
                         # need function to retrieve the html representation of the token
                         print("Got a match")
                     else:
@@ -141,38 +136,38 @@ class HTMLConverter():
 
     def convertHeading(self):
         """ Convert a heading to html and add it to output file """
-        size = self.currTok['size']
-        content = self.convertText(self.currTok['content'], True)
+        size = self.currTok["size"]
+        content = self.convertText(self.currTok["content"], True)
         outputString = "<h{0}>{1}</h{0}>".format(size, content)
         self.write(outputString)
 
     def convertLink(self):
         """ Converts a link to HTML and adds it to the output file """
-        linkTitle = self.currTok['title']
-        linkPath = self.currTok['path']
-        outputString = "<a href=\"{0}\">{1}</a>"
+        linkTitle = self.currTok["title"]
+        linkPath = self.currTok["path"]
+        outputString = '<a href="{0}">{1}</a>'
         self.write(outputString)
 
     def convertImage(self):
         """ Converts an image link to HTML and adds it to the output file """
-        imgAltText = self.currtok['title']
-        imgPath = self.currTok['path']
-        outputString = "<img src=\"{0}\" alt=\"{1}\" width=\"200\" height=\"200\">"
+        imgAltText = self.currtok["title"]
+        imgPath = self.currTok["path"]
+        outputString = '<img src="{0}" alt="{1}" width="200" height="200">'
 
     def convertTokens(self):
         streamLen = len(self.tokens)
         while self.currIndex < streamLen:
             # Marked Heading
-            if self.currTok['type'] == tokType.MHEADING:
+            if self.currTok["type"] == tokType.MHEADING:
                 self.convertHeading()
             # Regular link
-            elif self.currTok['type'] == tokType.LINK:
+            elif self.currTok["type"] == tokType.LINK:
                 self.convertLink()
             # Image link
-            elif self.currTok['type'] == tokType.IMAGE:
+            elif self.currTok["type"] == tokType.IMAGE:
                 self.convertImage()
             # Blank line
-            elif self.currTok['type'] == tokType.BLANK:
+            elif self.currTok["type"] == tokType.BLANK:
                 self.write("")
 
             self.nextTok()
