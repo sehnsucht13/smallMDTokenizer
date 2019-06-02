@@ -48,12 +48,16 @@ class HTMLConverter():
             which is represented by the var called fileHandle """
         self.fileHandle.write(htmlString + "\n")
 
-    def isMatch(self, text, singleLine, token, index):
-        """ Check if the provided token is matched within the current block
-            or only the current line."""
-            # Get the next token
+    def isMatch(self, text, token, singleLine,):
+        """ Check if the provided token is matched in the current line or 
+            the current block if no flag is provided """
+        # Get the next token
+        print("\n")
+        print("Matching")
+        print(text)
         textLen = len(text)
-        if singleLine and index + 1 < textLen:
+        index = 0
+        if singleLine and index + 1 != textLen:
             currIndex = index + 1
             currTok = text[currIndex]
             while currIndex < len(text):
@@ -78,6 +82,29 @@ class HTMLConverter():
         elif token["type"] == tokType.ITALIC:
             return "*"
 
+    def tokToHtml(self, token, close):
+        """ Return the HTML representation of the token. This can be either the
+            opening or closing tag depending on whether the argument \"close\"
+            is true or not """
+            if close is True:
+                if token["type"] == tokType.BOLD:
+                    return "</strong>"
+                elif token["type"] == tokType.ITALIC:
+                    return "</em>"
+                elif token["type"] == tokType.CROSS:
+                    return "</del>"
+                elif token["type"] == tokType.ICODE:
+                    return "</code>"
+            else:
+                if token["type"] == tokType.BOLD:
+                    return "<strong>"
+                elif token["type"] == tokType.ITALIC:
+                    return "<em>"
+                elif token["type"] == tokType.CROSS:
+                    return "<del>"
+                elif token["type"] == tokType.ICODE:
+                    return "<code>"
+
     def convertText(self, text, singleLine):
         """ Converts text tokens to their HTML form. When a special token
             such as bold or italic, they are converted only if a matching 
@@ -96,16 +123,12 @@ class HTMLConverter():
                     markUpText += subTok["content"]
                 else:
                     # check if the current token matches on the line
-                    if self.isMatch(text, True, subTok['type'], index):
+                    if self.isMatch(text[index + 1:], subTok['type'], True):
                         # need function to retrieve the html representation of the token
                         print("Got a match")
-                        pass
                     else:
                         # Need a function to retrieve the literal text translation
                         print("No match :(")
-                        pass
-
-                    
 
                 index += 1
 
