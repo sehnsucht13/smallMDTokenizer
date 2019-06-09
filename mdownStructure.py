@@ -86,7 +86,6 @@ class mdTokenizer:
         """ Adds the current block the the document structure. Used when another blocktype
             such as a bullet follows plain text."""
         if len(self.currBlock) is not 0:
-            print("Close block")
             self.document.append(self.currBlock)
             self.currBlock = []
 
@@ -210,12 +209,12 @@ class mdTokenizer:
 
     def isCheckItemOrBullet(self):
         """Check if the current line is a simple list bullet or is a checkmark"""
-        # Used to look ahead in the string
-        lookAheadIndex = self.currIndex + 1
-        while lookAheadIndex != len(self.text):
-            if self.text[lookAheadIndex] == "[":
-                return 1
-            lookAheadIndex += 1
+        if self.peekNext(1) == ' ' and self.peekNext(2) == '[':
+            return tokType.CHECKMARK
+        elif self.peekNext(1) == ' ':
+            return tokType.BULLET
+        else:
+            return tokType.PLAIN
 
     def isNumBullet(self):
         """ Check if the current line starting with a number is a 
@@ -263,7 +262,7 @@ class mdTokenizer:
 
     def isHR(self, char):
         """ Count the occurence of a certain type of character on a line of 
-            text. Used to detect line rules."""
+            text. Used to detect horizontal line rules."""
         count = 1
         pos = 1
         while self.peekNext(pos) == char:
@@ -340,10 +339,16 @@ class mdTokenizer:
                 if self.isHR("-") == True:
                     self.insertHR()
                     self.blankFlag = False
-                elif self.isCheckItemOrBullet() == 1:
-                    self.tokenizeCheckItem()
                 else:
-                    self.tokenizeBullet()
+                    # Check the type of the current line
+                    # If it is not a checkmark or a bullet, it is treated as
+                    # plaintext
+                    tokenType = self.isCheckItemOrBullet()
+                    if tokenType == tokType.CHECKMARK:
+                        print("Check")
+                        self.tokenizeCheckItem()
+                    elif tokenType == tokType.BULLET:
+                        self.tokenizeBullet()
             # Bullet starting with a +
             elif self.currChar == "+" and self.peekNext() == " ":
                 self.tokenizeBullet()
