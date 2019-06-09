@@ -86,7 +86,9 @@ class mdTokenizer:
         """ Adds the current block the the document structure. Used when another blocktype
             such as a bullet follows plain text."""
         if len(self.currBlock) is not 0:
+            # Add the block to the document structure
             self.document.append(self.currBlock)
+            # Create a new block
             self.currBlock = []
 
     def skipWhiteSpaceNewLine(self):
@@ -268,13 +270,9 @@ class mdTokenizer:
         while self.peekNext(pos) == char:
             count += 1
             pos += 1
-        print("Counted")
-        print(self.peekNext(pos))
         if self.peekNext(pos) == "\n" and count >= 3 and self.blankFlag == True:
-            print("Return tr")
             return True
         else:
-            print("Ret false")
             return False
 
     def insertHR(self):
@@ -330,7 +328,6 @@ class mdTokenizer:
             if self.currChar == "\n":
                 self.getNext()
             self.skipWhiteSpaceNewLine()
-            print("New start")
             # Standard heading starting with #
             if self.currChar == "#":
                 self.tokenizeMarkedHeading()
@@ -341,7 +338,7 @@ class mdTokenizer:
                 if self.isHR("_") == True:
                     self.insertHR()
             # Either a bullet or checklist item
-            elif self.currChar == '-' and self.isHR == True:
+            elif self.currChar == '-' and self.isHR('-') == True:
                 self.insertHR()
                 self.blankFlag = False
             elif self.currChar == '-' and self.peekNext(1) == ' ':
