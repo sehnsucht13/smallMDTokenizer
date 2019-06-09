@@ -82,6 +82,14 @@ class mdTokenizer:
         while self.currChar == " ":
             self.getNext()
 
+    def closeBlock(self):
+        """ Adds the current block the the document structure. Used when another blocktype
+            such as a bullet follows plain text."""
+        if len(self.currBlock) is not 0:
+            print("Close block")
+            self.document.append(self.currBlock)
+            self.currBlock = []
+
     def skipWhiteSpaceNewLine(self):
         """Resets the current index and consumes whitespace until an any
         character which is not space is reached"""
@@ -94,7 +102,7 @@ class mdTokenizer:
 
         # If the number of spaces is more than 0 then we have indented text
         if spaceNumberCount != 0:
-            self.tokens.append({"type": tokType.INDENT, "count": spaceNumberCount})
+            self.currBlock.append({"type": tokType.INDENT, "count": spaceNumberCount})
 
     def checkEmptyLine(self):
         """Check if the current line is an empty line"""
@@ -104,7 +112,7 @@ class mdTokenizer:
 
     def addEOL(self):
         """Adds an end of line token to the token list"""
-        self.tokens.append({"type": tokType.EOL})
+        self.currBlock.append({"type": tokType.EOL})
 
     def isRFlank(self):
         prevChar = self.peekPrev()
@@ -114,7 +122,7 @@ class mdTokenizer:
         elif prevChar is False:
             return True
 
-    def eatCharsPlain(self):
+    def eatChars(self):
         """Consumes characters and returns them to the calling function in the form of
         a string. This function assumes that what is to be consumed is only
         plain characters without any markup. Used for headings"""
@@ -123,105 +131,6 @@ class mdTokenizer:
             itemText += self.currChar
             self.getNext()
         return itemText
-
-    def eatCharsMarkup(self):
-        """Consume characters which are using some type of markup such as * or **"""
-        textArr = []
-        while self.currChar != "\n":
-            # Case of bold text like **WORD**
-            if (
-                self.currChar == "*"
-                and self.peekNext(1) == "*"
-                and self.peekNext(2) != " "
-            ) or (
-                self.currChar == "_"
-                and self.peekNext(1) == "_"
-                and self.peekNext(2) != " "
-            ):
-
-                # Skip over * and *
-                self.getNext()
-                self.getNext()
-                # Add token for the left run bolded
-                textArr.append({"type": tokType.LBOLD})
-
-            elif (
-                self.peekPrev() != " "
-                and self.currChar == "*"
-                and self.peekNext(1) == "*"
-            ) or (
-                self.peekPrev() != " "
-                and self.currChar == "_"
-                and self.peekNext(1) == "_"
-            ):
-                # Skip over * and *
-                self.getNext()
-                self.getNext()
-                textArr.append({"type": tokType.RBOLD})
-                print("got rbold")
-
-            # Case of italic text like *WORD*
-            elif (self.currChar == "*" and self.peekNext(1) != " ") or (
-                self.currChar == "_" and self.peekNext(1) != " "
-            ):
-                # Skip over * to next character
-                self.getNext()
-                # Add token for italic text
-                textArr.append({"type": tokType.LITALIC})
-
-            elif (self.currChar == "*" and self.peekPrev() != " ") or (
-                self.currChar == "_" and self.peekPrev() != " "
-            ):
-                # Skip over * to next character
-                self.getNext()
-                # Add token for italic text
-                textArr.append({"type": tokType.RITALIC})
-            # Inline code
-            elif self.currChar == "`":
-                # skip over the `
-                self.getNext()
-                # Add token
-                textArr.append({"type": tokType.ICODE})
-
-            # Small addition to regular markdown markup which supports crossed out text
-            # Uses ~~Crossed out text~~
-            elif self.currChar == "~" and self.peekNext() == "~":
-                self.getNext()
-                self.getNext()
-                textArr.append({"type": tokType.CROSS})
-
-            # Default case for plain text
-            else:
-                textContent = ""
-                while self.currChar not in ["\n", "*", "_", "[", "`", "("]:
-                    # Check for escape characters
-                    if self.currChar == "\\" and self.peekNext() in [
-                        "(",
-                        ")",
-                        "[",
-                        "]",
-                        "\\",
-                        "_",
-                        "*",
-                        "_",
-                        ".",
-                        "!",
-                        "-",
-                        "`",
-                    ]:
-                        # Skip over the /
-                        self.getNext()
-                        # Add the escaped character as a normal one
-                        textContent += self.currChar
-                    else:
-                        textContent += self.currChar
-
-                    self.getNext()
-
-                # Add token for plain text with its content
-                textArr.append({"type": tokType.PLAIN, "content": textContent})
-
-        return textArr
 
     def tokenizeMarkedHeading(self):
         """Tokenizes a standard markdown heading"""
@@ -236,7 +145,10 @@ class mdTokenizer:
         self.skipWhiteSpace()
 
         # Add contents of heading
-        headingText = self.eatCharsPlain()
+        headingText = self.eatChars()
+
+        # Close off the block
+        self.closeBlock()
 
         # Append to token list
         self.document.append(
@@ -245,88 +157,28 @@ class mdTokenizer:
 
     def tokenizeUnmarkedHeading(self):
         """ Tokenize headings which are underlined """
-        textContent = self.eatCharsPlain()
+        textContent = self.eatChars()
         # skip over the next line since it is useless to parse
         while self.getNext() != "\n":
             pass
 
-        self.tokens.append({"type": tokType.UHEADING, "content": textContent})
+        # Close off the block
+        self.closeBlock()
+        self.document.append({"type": tokType.UHEADING, "content": textContent})
 
     def tokenizeText(self):
         """Tokenizes a line of marked up text"""
         # Case of an empty line
         if self.currChar == "\n":
             self.blankFlag = True
-            self.tokens.append({"type": tokType.BLANK})
+            self.block.append({"type": tokType.BLANK})
 
         # Case of any other text
         else:
             self.blankFlag = False
-            textContent = self.eatCharsMarkup()
-            self.tokens.append({"type": tokType.MARKUPTEXT, "content": textContent})
+            textContent = self.eatChars()
+            self.currBlock.append({"type": tokType.PLAIN, "content": textContent})
 
-    def tokenizeLink(self):
-        """Tokenizes a standard markdown link"""
-        linkTitle = ""
-        linkPath = ""
-        self.skipWhiteSpace()
-        self.getNext()
-        self.skipWhiteSpace()
-        while self.getNext() != "]":
-            linkTitle += self.currChar
-
-        # Skip over the ] character
-        self.getNext()
-        self.skipWhiteSpace()
-        # Skip over (
-        self.getNext()
-        self.skipWhiteSpace()
-        while self.getNext() != ")":
-            linkPath += self.currChar
-
-        self.tokens.append({"type": tokType.LINK, "title": linkTitle, "path": linkPath})
-
-    def tokenizeImage(self):
-        """ Tokenizes an image link """
-        imgDesc = ""
-        imgURL = ""
-        imgTitle = ""
-
-        if self.currChar == "!":
-            self.getNext()
-
-        # Skip over the opening [ bracket
-        self.getNext()
-
-        # retrieve the description
-        while self.currChar != "]":
-            imgDesc += self.currChar
-            self.getNext()
-
-        # Skip over the closing ] bracket
-        self.getNext()
-        # Skip over the (
-        self.getNext()
-
-        # Retrieve the url
-        while self.currChar not in ['"', ")"]:
-            imgURL += self.currChar
-            self.getNext()
-
-        # Retrieve the link title
-        if self.currChar == '"':
-            self.getNext()
-            while self.currChar != '"':
-                imgTitle += self.currChar
-                self.getNext()
-
-        # skip over the )
-        self.getNext()
-        self.getNext()
-
-        self.tokens.append(
-            {"type": tokType.IMAGE, "desc": imgDesc, "url": imgURL, "title": imgTitle}
-        )
 
     def tokenizeCheckItem(self):
         """ Tokenize a checklist item of the form:
@@ -347,11 +199,14 @@ class mdTokenizer:
         self.getNext()
         self.skipWhiteSpace()
 
-        checkItemContent = self.eatCharsMarkup()
-        self.tokens.append(
+        checkItemContent = self.eatChars()
+
+        # Close off the block
+        self.closeBlock()
+        self.document.append(
             {"type": tokType.CHECKMARK, "status": status, "content": checkItemContent}
         )
-        self.addEOL()
+
 
     def isCheckItemOrBullet(self):
         """Check if the current line is a simple list bullet or is a checkmark"""
@@ -388,8 +243,10 @@ class mdTokenizer:
             self.getNext()
             self.skipWhiteSpace()
             # Consume the chars
-            text = self.eatCharsMarkup()
-            self.tokens.append({"type": tokType.NUMBULLET, "content": text})
+            text = self.eatChars()
+
+            self.closeBlock()
+            self.document.append({"type": tokType.NUMBULLET, "content": text})
 
         # Case of a regular bullet
         else:
@@ -399,8 +256,10 @@ class mdTokenizer:
             self.skipWhiteSpace()
 
             # Consume the characters
-            text = self.eatCharsMarkup()
-            self.tokens.append({"type": tokType.BULLET, "content": text})
+            text = self.eatChars()
+
+            self.closeBlock()
+            self.document.append({"type": tokType.BULLET, "content": text})
 
     def isHR(self, char):
         """ Count the occurence of a certain type of character on a line of 
@@ -421,7 +280,9 @@ class mdTokenizer:
             self.getNext()
 
         self.getNext()
-        self.tokens.append({"type": tokType.HR})
+
+        self.closeBlock()
+        self.document.append({"type": tokType.HR})
 
     def getNextLine(self):
         """ Returns the start and end positions of the next line """
@@ -492,32 +353,20 @@ class mdTokenizer:
                     self.insertHR()
                 elif self.peekNext() == " ":
                     self.tokenizeBullet()
-            # Image link
-            elif self.currChar == "!" and self.peekNext() == "[":
-                self.tokenizeImage()
-            # Normal link
-            elif self.currChar == "[":
-                self.tokenizeLink()
-            # Code blocks
-            elif (
-                self.peekPrev == "\n"
-                and self.currChar == "`"
-                and self.peekNext() == "`"
-                and self.peekNext(2) == "`"
-            ):
-                self.tokens.append({"type": tokType.CBLOCK})
             # Numbered Bullets
             elif str.isdigit(self.currChar) and self.isNumBullet() == True:
                 self.tokenizeBullet()
+            # Case of plain text
             else:
                 self.tokenizeText()
 
-        # Add an EOF token
-        self.tokens.append({"type": "EOF"})
+
+        # Add an EOF token to signify end of file
+        self.document.append({"type": "EOF"})
 
     def returnTokenList(self):
-        """ Return the list of tokens """
-        return self.tokens
+        """ Return the list of tokens which outlines the entire structure of the document"""
+        return self.document
 
 
 # temp test
