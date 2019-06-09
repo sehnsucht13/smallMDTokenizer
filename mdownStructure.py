@@ -15,7 +15,6 @@
 #     Copyright (C) 2019 Yavor Konstantinov
 #
 
-import sys  # used to exit program when an undesirable state occurs
 from tokenType import tokType
 import re
 
@@ -28,18 +27,28 @@ class mdTokenizer:
 
         # Handle to the source file
         self.src = source
+
         # The contents of the source file
         self.text = self.src.read()
+
         # Index of the last character in the source file
         self.EOF = len(self.text)
+
         # Current index along the source
         self.currIndex = 0
-        # The list of tokens created
-        self.tokens = []
+
+        # A list holding the structure of the document
+        self.document = []
+
+        # The current block. Used for plaintext while headers and all others
+        # reside in their own block
+        self.currBlock = []
+
         # The current character
         self.currChar = self.text[self.currIndex]
+
         # Indicates if the previous line was a blank.
-        # used to recognize horizontal ruling
+        # used to recognize horizontal ruling vs plain - or =
         self.blankFlag = False
 
     def getNext(self):
@@ -64,7 +73,7 @@ class mdTokenizer:
             the position """
         # Case of being at the beginning of file
         if self.currIndex == 0:
-            return False
+            return None
         else:
             return self.text[self.currIndex - 1]
 
@@ -227,16 +236,16 @@ class mdTokenizer:
         self.skipWhiteSpace()
 
         # Add contents of heading
-        headingText = self.eatCharsMarkup()
+        headingText = self.eatCharsPlain()
 
         # Append to token list
-        self.tokens.append(
+        self.document.append(
             {"type": tokType.MHEADING, "size": headingSize, "content": headingText}
         )
 
     def tokenizeUnmarkedHeading(self):
         """ Tokenize headings which are underlined """
-        textContent = self.eatCharsMarkup()
+        textContent = self.eatCharsPlain()
         # skip over the next line since it is useless to parse
         while self.getNext() != "\n":
             pass
@@ -512,8 +521,8 @@ class mdTokenizer:
 
 
 # temp test
-# if __name__ == "__main__":
-# src = open("test.md", "r")
-# tok = mdTokenizer(src)
-# tok.tokenize()
-# print(tok.returnTokenList())
+if __name__ == "__main__":
+ src = open("test.md", "r")
+ tok = mdTokenizer(src)
+ tok.tokenize()
+ print(tok.returnTokenList())
