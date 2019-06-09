@@ -170,7 +170,7 @@ class mdTokenizer:
         # Case of an empty line
         if self.currChar == "\n":
             self.blankFlag = True
-            self.block.append({"type": tokType.BLANK})
+            self.currBlock.append({"type": tokType.BLANK})
 
         # Case of any other text
         else:
@@ -268,13 +268,18 @@ class mdTokenizer:
         while self.peekNext(pos) == char:
             count += 1
             pos += 1
+        print("Counted")
+        print(self.peekNext(pos))
         if self.peekNext(pos) == "\n" and count >= 3 and self.blankFlag == True:
+            print("Return tr")
             return True
         else:
+            print("Ret false")
             return False
 
     def insertHR(self):
         """ Insert a horizontal rule token into the token stream """
+        print("Insert hr")
         while self.currChar != "\n":
             self.getNext()
 
@@ -325,6 +330,7 @@ class mdTokenizer:
             if self.currChar == "\n":
                 self.getNext()
             self.skipWhiteSpaceNewLine()
+            print("New start")
             # Standard heading starting with #
             if self.currChar == "#":
                 self.tokenizeMarkedHeading()
@@ -335,20 +341,18 @@ class mdTokenizer:
                 if self.isHR("_") == True:
                     self.insertHR()
             # Either a bullet or checklist item
-            elif self.currChar == "-":
-                if self.isHR("-") == True:
-                    self.insertHR()
-                    self.blankFlag = False
-                else:
-                    # Check the type of the current line
-                    # If it is not a checkmark or a bullet, it is treated as
-                    # plaintext
-                    tokenType = self.isCheckItemOrBullet()
-                    if tokenType == tokType.CHECKMARK:
-                        print("Check")
-                        self.tokenizeCheckItem()
-                    elif tokenType == tokType.BULLET:
-                        self.tokenizeBullet()
+            elif self.currChar == '-' and self.isHR == True:
+                self.insertHR()
+                self.blankFlag = False
+            elif self.currChar == '-' and self.peekNext(1) == ' ':
+                # Check the type of the current line
+                # If it is not a checkmark or a bullet, it is treated as
+                # plaintext
+                tokenType = self.isCheckItemOrBullet()
+                if tokenType == tokType.CHECKMARK:
+                    self.tokenizeCheckItem()
+                elif tokenType == tokType.BULLET:
+                    self.tokenizeBullet()
             # Bullet starting with a +
             elif self.currChar == "+" and self.peekNext() == " ":
                 self.tokenizeBullet()
@@ -365,7 +369,8 @@ class mdTokenizer:
             else:
                 self.tokenizeText()
 
-
+    
+        self.closeBlock()
         # Add an EOF token to signify end of file
         self.document.append({"type": "EOF"})
 
